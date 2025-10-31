@@ -18,6 +18,8 @@ export interface EsimPlan {
   duration: string;
   price: number;
   features: string[];
+  // Optional: ISO 3166-1 alpha-2 country codes covered by this plan
+  countriesCovered?: string[];
 }
 
 // Active eSIM Types
