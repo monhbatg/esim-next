@@ -12,6 +12,7 @@ export default function SignUp() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,19 +34,8 @@ export default function SignUp() {
     setError("");
 
     try {
-      // Construct body as requested
-      const body = {
-        email,
-        password,
-        firstName,
-        lastName,
-      };
-
-      // Simulate API submission (replace with real API call when available)
-      // await fetch("/api/auth/register", { method: "POST", body: JSON.stringify(body) });
-
-      // Use auth context to persist session
-      await register(body.email, body.password, body.firstName, body.lastName);
+      // Use auth context to handle signup
+      await register(email, password, firstName, lastName, phoneNumber);
 
       const pendingPurchase = sessionStorage.getItem("pendingPurchase");
       if (pendingPurchase) {
@@ -56,8 +46,9 @@ export default function SignUp() {
         sessionStorage.getItem("redirectAfterLogin") || "/profile";
       sessionStorage.removeItem("redirectAfterLogin");
       router.push(redirectPath);
-    } catch (_err) {
-      setError("Sign up failed. Please try again.");
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError(err instanceof Error ? err.message : "Sign up failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +103,15 @@ export default function SignUp() {
             />
 
             <Input
+              label="Phone Number"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="99999999"
+              required
+            />
+
+            <Input
               label="Password"
               type="password"
               value={password}
@@ -141,5 +141,3 @@ export default function SignUp() {
     </div>
   );
 }
-
-

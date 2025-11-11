@@ -1,11 +1,45 @@
 // User Types
+export interface UserPreferences {
+  preferredCurrency: string;
+  preferredLanguage: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  pushNotifications: boolean;
+  favoriteCountries: string[];
+  timezone: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  isActive?: boolean;
+  lastLoginAt?: string | Date;
   memberSince: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  preferredCurrency?: string;
+  preferences?: UserPreferences;
   totalEsims: number;
   activeEsims: number;
+}
+
+// Full user profile from /users/me endpoint
+export interface UserProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  isActive: boolean;
+  lastLoginAt: string;
+  createdAt: string;
+  updatedAt: string;
+  preferredCurrency: string;
+  preferences: UserPreferences;
 }
 
 // eSIM Plan Types
@@ -66,10 +100,39 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Auth Response Types
+export interface AuthResponseDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isActive: boolean;
+  lastLoginAt: Date;
+  createdAt: Date;
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
 // Navigation Types
 export interface NavigationItem {
   name: string;
   href: string;
   icon?: string;
+}
+
+// Wallet Types
+export interface Wallet {
+  userId: string;
+  balance: number;
+  currency: string;
+}
+
+export interface AddBalanceResponse {
+  userId: string;
+  balance: number;
+  currency: string;
+  previousBalance: number;
+  amountAdded: number;
 }
 

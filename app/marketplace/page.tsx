@@ -55,6 +55,84 @@ const packageList = [
       },
     ],
   },
+  {
+    packageCode: "EU-5GB-30",
+    slug: "EU-5GB-30",
+    name: "Europe 5GB 30Days",
+    price: 19900,
+    currencyCode: "USD",
+    volume: 5368709120,
+    smsStatus: 1,
+    dataType: 1,
+    unusedValidTime: 180,
+    duration: 30,
+    durationUnit: "DAY",
+    location: "FR,DE,IT,ES,GB",
+    description: "Europe 5GB 30Days",
+    activeType: 2,
+    favorite: false,
+    retailPrice: 39800,
+    speed: "4G/5G",
+    locationNetworkList: [
+      { locationName: "France", locationLogo: "/img/flags/fr.png", operatorList: [{ operatorName: "Orange", networkType: "5G" }] },
+      { locationName: "Germany", locationLogo: "/img/flags/de.png", operatorList: [{ operatorName: "Vodafone", networkType: "5G" }] },
+      { locationName: "Italy", locationLogo: "/img/flags/it.png", operatorList: [{ operatorName: "TIM", networkType: "5G" }] },
+      { locationName: "Spain", locationLogo: "/img/flags/es.png", operatorList: [{ operatorName: "Movistar", networkType: "5G" }] },
+      { locationName: "United Kingdom", locationLogo: "/img/flags/gb.png", operatorList: [{ operatorName: "EE", networkType: "5G" }] },
+    ],
+  },
+  {
+    packageCode: "AS-3GB-15",
+    slug: "AS-3GB-15",
+    name: "Asia 3GB 15Days",
+    price: 14900,
+    currencyCode: "USD",
+    volume: 3221225472,
+    smsStatus: 1,
+    dataType: 1,
+    unusedValidTime: 180,
+    duration: 15,
+    durationUnit: "DAY",
+    location: "JP,KR,SG,TH",
+    description: "Asia 3GB 15Days",
+    activeType: 2,
+    favorite: false,
+    retailPrice: 29800,
+    speed: "4G/5G",
+    locationNetworkList: [
+      { locationName: "Japan", locationLogo: "/img/flags/jp.png", operatorList: [{ operatorName: "NTT Docomo", networkType: "5G" }] },
+      { locationName: "South Korea", locationLogo: "/img/flags/kr.png", operatorList: [{ operatorName: "SK Telecom", networkType: "5G" }] },
+      { locationName: "Singapore", locationLogo: "/img/flags/sg.png", operatorList: [{ operatorName: "Singtel", networkType: "5G" }] },
+      { locationName: "Thailand", locationLogo: "/img/flags/th.png", operatorList: [{ operatorName: "AIS", networkType: "5G" }] },
+    ],
+  },
+  {
+    packageCode: "GL-10GB-30",
+    slug: "GL-10GB-30",
+    name: "Global 10GB 30Days",
+    price: 49900,
+    currencyCode: "USD",
+    volume: 10737418240,
+    smsStatus: 1,
+    dataType: 1,
+    unusedValidTime: 180,
+    duration: 30,
+    durationUnit: "DAY",
+    location: "US,GB,FR,DE,JP,AU",
+    description: "Global 10GB 30Days",
+    activeType: 2,
+    favorite: true,
+    retailPrice: 99800,
+    speed: "4G/5G",
+    locationNetworkList: [
+      { locationName: "United States", locationLogo: "/img/flags/us.png", operatorList: [{ operatorName: "Verizon", networkType: "5G" }] },
+      { locationName: "United Kingdom", locationLogo: "/img/flags/gb.png", operatorList: [{ operatorName: "EE", networkType: "5G" }] },
+      { locationName: "France", locationLogo: "/img/flags/fr.png", operatorList: [{ operatorName: "Orange", networkType: "5G" }] },
+      { locationName: "Germany", locationLogo: "/img/flags/de.png", operatorList: [{ operatorName: "Vodafone", networkType: "5G" }] },
+      { locationName: "Japan", locationLogo: "/img/flags/jp.png", operatorList: [{ operatorName: "NTT Docomo", networkType: "5G" }] },
+      { locationName: "Australia", locationLogo: "/img/flags/au.png", operatorList: [{ operatorName: "Telstra", networkType: "5G" }] },
+    ],
+  },
 ];
 
 // Build regions from availableLocations names (declared after availableLocations)
@@ -862,67 +940,61 @@ function formatPrice(amountMinor: number): number {
   return parseFloat((amountMinor / factor).toFixed(2));
 }
 
-function mapPackageToEsimPlan(
+function mapPackageToEsimPlans(
   pkg: (typeof packageList)[number],
-  index: number
-): EsimPlan {
+  baseIndex: number
+): EsimPlan[] {
   const countriesCovered = pkg.location
     .split(",")
     .map((c) => c.trim().toUpperCase())
     .filter(Boolean);
-  const firstIsoCode = countriesCovered[0];
-  const firstLocationName =
-    pkg.locationNetworkList?.[0]?.locationName || "Multi-country";
+  
   const region = extractRegionFromName(pkg.name);
-  const price = formatPrice(pkg.price);
-  const features: string[] = [
-    `${pkg.speed} Speed`,
-    `${pkg.locationNetworkList?.length || 1} countries covered`,
-    "No Contract",
-  ];
+  const locationNetworkList = pkg.locationNetworkList || [];
+  
+  // Create individual plan for each country in the package
+  return locationNetworkList.map((location, idx) => {
+    const countryCode = countriesCovered[idx] || countriesCovered[0];
+    const countryName = location.locationName;
+    const operators = location.operatorList || [];
+    const networkTypes = operators.map(op => op.networkType).filter(Boolean);
+    const has5G = networkTypes.some(type => type.includes("5G"));
+    
+    const price = formatPrice(pkg.price);
+    const features: string[] = [
+      `${pkg.speed} Speed`,
+      has5G ? "5G Available" : "4G/3G Network",
+      "No Contract",
+      "Instant Activation",
+    ];
 
-  return {
-    id: index + 1,
-    country: firstLocationName,
-    region,
-    flag: codeToFlagEmoji(firstIsoCode),
-    data: formatVolume(pkg.volume),
-    duration: formatDuration(pkg.duration, pkg.durationUnit),
-    price,
-    features,
-    countriesCovered,
-  };
+    return {
+      id: baseIndex * 100 + idx + 1, // Unique ID for each country plan
+      country: countryName,
+      region,
+      flag: codeToFlagEmoji(countryCode),
+      data: formatVolume(pkg.volume),
+      duration: formatDuration(pkg.duration, pkg.durationUnit),
+      price,
+      features,
+      countriesCovered: [countryCode], // Single country per plan
+    };
+  });
 }
 
 export default function Marketplace() {
   const [selectedRegion, setSelectedRegion] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [showCountryPicker, setShowCountryPicker] = useState<boolean>(false);
   const [showRegionModal, setShowRegionModal] = useState<boolean>(false);
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { setSelectedPlan } = useCheckout();
 
-  const plans: EsimPlan[] = packageList.map(mapPackageToEsimPlan);
-
-  // Build country maps for search suggestions and chip labels
-  const countryCodeToName = useMemo(() => {
-    const map = new Map<string, string>();
-    availableLocations.forEach((group) => {
-      group.subLocationList.forEach((sub) => {
-        map.set(sub.code.toUpperCase(), sub.name);
-      });
-    });
-    return map;
-  }, []);
-
-  const allCountriesList = useMemo(() => {
-    const list: Array<{ code: string; name: string }> = [];
-    countryCodeToName.forEach((name, code) => list.push({ code, name }));
-    return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [countryCodeToName]);
+  // Create individual plans for each country
+  const plans: EsimPlan[] = packageList.flatMap((pkg, index) => 
+    mapPackageToEsimPlans(pkg, index)
+  );
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 250);
@@ -960,36 +1032,17 @@ export default function Marketplace() {
       );
     }
 
-    if (selectedCountries.length > 0) {
-      result = result.filter((plan) => {
-        const covered = plan.countriesCovered || [];
-        return covered.some((code) => selectedCountries.includes(code));
-      });
-    }
-
     if (debouncedQuery) {
       const q = debouncedQuery.toLowerCase();
-      result = result.filter((plan) => {
-        const coveredNames = (plan.countriesCovered || []).map(
-          (c) => countryCodeToName.get(c) || c
-        );
-        return (
-          plan.country.toLowerCase().includes(q) ||
-          plan.region.toLowerCase().includes(q) ||
-          plan.features.some((f) => f.toLowerCase().includes(q)) ||
-          coveredNames.some((n) => n.toLowerCase().includes(q))
-        );
-      });
+      result = result.filter((plan) => 
+        plan.country.toLowerCase().includes(q) ||
+        plan.region.toLowerCase().includes(q) ||
+        plan.features.some((f) => f.toLowerCase().includes(q))
+      );
     }
 
     return result;
-  }, [
-    plans,
-    selectedRegion,
-    selectedCountries,
-    debouncedQuery,
-    countryCodeToName,
-  ]);
+  }, [plans, selectedRegion, debouncedQuery]);
 
   const handlePurchase = (plan: EsimPlan) => {
     if (!isAuthenticated) {
@@ -1006,223 +1059,133 @@ export default function Marketplace() {
     <div className="py-20 md:py-28 bg-linear-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h1 className="text-6xl md:text-7xl font-black mb-6 bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-            eSIM Marketplace
+        <div className="max-w-4xl mx-auto text-center mb-12">
+          <h1 className="text-5xl md:text-6xl font-black mb-6 text-slate-900">
+            eSIM Plans
           </h1>
-          <p className="text-xl md:text-2xl text-slate-700 leading-relaxed">
-            Choose from our wide selection of eSIM plans for destinations
-            worldwide
+          <p className="text-lg md:text-xl text-slate-700 leading-relaxed">
+            Select your destination country and choose the perfect data plan
           </p>
         </div>
 
         {/* Filters */}
-        <div className="max-w-6xl mx-auto mb-12">
-          <div className="grid gap-4">
-            <div>
-              <label
-                htmlFor="plan-search"
-                className="block text-sm font-semibold text-slate-700 mb-1"
-              >
-                Search plans
-              </label>
-              <input
-                id="plan-search"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={'Try "Japan", "Europe", or "5G"'}
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                aria-describedby="plan-search-help"
-              />
-              <p id="plan-search-help" className="mt-1 text-xs text-slate-500">
-                Matches destination names, regions, and plan features.
-              </p>
-            </div>
-          </div>
+        <div className="max-w-6xl mx-auto mb-10">
+          <div className="bg-white rounded-xl shadow-md border-2 border-slate-300 p-6">
+            <div className="flex flex-col gap-4">
+              {/* Search */}
+              <div>
+                <label className="block text-base font-bold text-slate-900 mb-2">
+                  Search Plans
+                </label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder='Search by country name (e.g., United States, Japan, France)...'
+                  className="w-full px-5 py-4 text-lg rounded-xl border-2 border-slate-400 bg-white focus:outline-none focus:ring-4 focus:ring-emerald-300 focus:border-emerald-600 transition-all"
+                />
+              </div>
+              
+              {/* Region Filter */}
+              <div>
+                <label className="block text-base font-bold text-slate-900 mb-2">
+                  Select Region
+                </label>
+                <button
+                  onClick={() => setShowRegionModal(true)}
+                  className="w-full px-5 py-4 text-lg rounded-xl border-2 border-slate-400 bg-white hover:border-emerald-600 hover:bg-emerald-50 transition-all text-left flex items-center justify-between"
+                >
+                  <span className="inline-flex items-center gap-3">
+                    <span className="text-2xl">{regionEmoji(selectedRegion)}</span>
+                    <span className="font-semibold text-slate-900">
+                      {normalizeRegionName(selectedRegion)}
+                    </span>
+                  </span>
+                  <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
 
-          <div className="mt-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-slate-700">
-                Region
-              </span>
-              {(searchQuery ||
-                selectedCountries.length ||
-                selectedRegion !== "All") && (
+              {/* Clear Filters */}
+              {(searchQuery || selectedRegion !== "All") && (
                 <button
                   onClick={() => {
                     setSelectedRegion("All");
                     setSearchQuery("");
-                    setSelectedCountries([]);
                   }}
-                  className="text-xs font-semibold text-slate-700 hover:text-slate-900 underline underline-offset-2"
+                  className="w-full px-5 py-4 text-lg rounded-xl border-2 border-slate-400 bg-slate-100 hover:bg-slate-200 transition-all font-bold text-slate-900"
                 >
-                  Clear all filters
+                  Clear All Filters
                 </button>
               )}
             </div>
-            <button
-              onClick={() => setShowRegionModal(true)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white shadow-sm hover:border-emerald-400 hover:shadow-md transition-all text-left flex items-center justify-between"
-            >
-              <span className="inline-flex items-center gap-2">
-                <span className="text-base">{regionEmoji(selectedRegion)}</span>
-                <span className="font-medium text-slate-700">
-                  {normalizeRegionName(selectedRegion)}
-                </span>
-              </span>
-              <span className="text-slate-400">⌄</span>
-            </button>
-          </div>
-
-          {/* Country multi-select */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Countries
-                </span>
-                {selectedCountries.length > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                    {selectedCountries.length} selected
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                {selectedCountries.length > 0 && (
-                  <button
-                    onClick={() => setSelectedCountries([])}
-                    className="text-xs font-semibold text-slate-700 hover:text-slate-900 underline underline-offset-2"
-                  >
-                    Clear countries
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowCountryPicker((s) => !s)}
-                  className="text-xs font-semibold text-slate-700 hover:text-slate-900 underline underline-offset-2"
-                  aria-expanded={showCountryPicker}
-                  aria-controls="country-picker"
-                >
-                  {showCountryPicker ? "Hide list" : "Show list"}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {selectedCountries.map((code) => (
-                <span
-                  key={code}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold"
-                >
-                  <span>{codeToFlagEmoji(code)}</span>
-                  <span>{countryCodeToName.get(code) || code}</span>
-                  <button
-                    aria-label={`Remove ${countryCodeToName.get(code) || code}`}
-                    onClick={() =>
-                      setSelectedCountries((prev) =>
-                        prev.filter((c) => c !== code)
-                      )
-                    }
-                    className="ml-1 text-emerald-700 hover:text-emerald-900"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-              {selectedCountries.length === 0 && (
-                <span className="text-slate-500">
-                  Filter by country (optional)
-                </span>
-              )}
-            </div>
-
-            {showCountryPicker && (
-              <div
-                id="country-picker"
-                className="mt-3 max-h-56 overflow-y-auto rounded-xl border-2 border-slate-200 bg-white p-2 grid grid-cols-2 md:grid-cols-3 gap-2"
-              >
-                {allCountriesList.map(({ code, name }) => {
-                  const active = selectedCountries.includes(code);
-                  return (
-                    <button
-                      key={code}
-                      onClick={() =>
-                        setSelectedCountries((prev) =>
-                          active
-                            ? prev.filter((c) => c !== code)
-                            : [...prev, code]
-                        )
-                      }
-                      className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border ${
-                        active
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-800"
-                          : "border-slate-200 hover:bg-slate-50 text-slate-700"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="text-xl">{codeToFlagEmoji(code)}</span>
-                        <span className="font-medium">{name}</span>
-                      </span>
-                      {active && (
-                        <span className="text-emerald-600 font-bold">✓</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Plans Grid */}
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPlans.map((plan) => (
               <Card key={plan.id} hover className="flex flex-col group">
-                <div className="mb-6 pb-6 border-b-2 border-slate-200">
-                  <div className="text-7xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <div className="mb-6 pb-6 border-b-2 border-slate-300">
+                  <div className="text-6xl mb-4">
                     {plan.flag}
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-1">
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight">
                     {plan.country}
                   </h3>
-                  <p className="text-sm text-slate-500 font-semibold">
+                  <p className="text-base text-slate-600 font-semibold">
                     {plan.region}
                   </p>
                 </div>
 
                 <div className="mb-6">
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-5xl font-black bg-linear-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                      ${plan.price}
-                    </span>
-                    <span className="text-slate-500 font-semibold">
-                      / {plan.duration}
-                    </span>
+                  <div className="mb-4">
+                    <p className="text-sm font-bold text-slate-600 mb-1">Price</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-black text-emerald-700">
+                        ${plan.price}
+                      </span>
+                      <span className="text-xl text-slate-600 font-semibold">
+                        USD
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-xl font-black text-slate-900">
-                    {plan.data} Data
-                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-100 rounded-lg p-3 border-2 border-slate-300">
+                      <p className="text-xs font-bold text-slate-600 mb-1">Data</p>
+                      <p className="text-xl font-black text-slate-900">{plan.data}</p>
+                    </div>
+                    <div className="bg-slate-100 rounded-lg p-3 border-2 border-slate-300">
+                      <p className="text-xs font-bold text-slate-600 mb-1">Valid For</p>
+                      <p className="text-xl font-black text-slate-900">{plan.duration}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-6 grow">
+                  <p className="text-sm font-bold text-slate-600 mb-3">What&apos;s Included:</p>
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li
                         key={index}
-                        className="flex items-center text-slate-700 font-medium"
+                        className="flex items-start text-base text-slate-900 font-semibold"
                       >
-                        <span className="mr-3 text-emerald-600 font-black text-xl">
+                        <span className="mr-3 text-emerald-600 font-black text-xl mt-0.5">
                           ✓
                         </span>
-                        {feature}
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <Button className="w-full" onClick={() => handlePurchase(plan)}>
-                  Purchase Plan →
+                <Button 
+                  className="w-full py-4 text-lg font-bold" 
+                  onClick={() => handlePurchase(plan)}
+                >
+                  Buy This Plan →
                 </Button>
               </Card>
             ))}
@@ -1230,16 +1193,15 @@ export default function Marketplace() {
         </div>
 
         {/* Info Section */}
-        <div className="max-w-4xl mx-auto mt-20 text-center">
-          <Card className="bg-linear-to-br from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-200">
-            <h2 className="text-3xl font-black mb-4 text-slate-900">
-              Need Help Choosing?
+        <div className="max-w-4xl mx-auto mt-16 text-center">
+          <Card className="bg-emerald-50 border-2 border-emerald-400 p-8">
+            <h2 className="text-3xl font-black mb-5 text-slate-900">
+              Need Help Choosing a Plan?
             </h2>
-            <p className="text-lg text-slate-700 mb-6 leading-relaxed">
-              Not sure which plan is right for you? Our support team is here to
-              help you find the perfect connectivity solution.
+            <p className="text-xl text-slate-700 mb-8 leading-relaxed">
+              Our friendly support team is available to help you find the perfect plan for your trip.
             </p>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className="text-lg py-4 px-8 font-bold">
               Contact Support →
             </Button>
           </Card>
@@ -1261,21 +1223,21 @@ export default function Marketplace() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-200 shrink-0">
-              <h3 className="text-base sm:text-lg font-black text-slate-900">
-                Select Region
+            <div className="flex items-center justify-between p-5 border-b-2 border-slate-300 shrink-0">
+              <h3 className="text-2xl font-black text-slate-900">
+                Select Your Region
               </h3>
               <button
                 onClick={() => setShowRegionModal(false)}
-                className="p-1 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition-colors"
                 aria-label="Close modal"
               >
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  className="w-7 h-7"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
@@ -1285,8 +1247,8 @@ export default function Marketplace() {
             </div>
 
             {/* Region List - Scrollable */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {regions.map((region) => (
                   <button
                     key={region}
@@ -1294,21 +1256,21 @@ export default function Marketplace() {
                       setSelectedRegion(region);
                       setShowRegionModal(false);
                     }}
-                    className={`w-full px-3 py-2 rounded-lg text-left transition-colors border text-xs leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                    className={`w-full px-5 py-4 rounded-xl text-left transition-colors border-2 text-base leading-normal focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
                       selectedRegion === region
                         ? "border-emerald-600 bg-emerald-600 text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-emerald-400 hover:bg-emerald-50"
+                        : "border-slate-300 bg-white text-slate-900 hover:border-emerald-500 hover:bg-emerald-50"
                     }`}
                     aria-pressed={selectedRegion === region}
                     title={normalizeRegionName(region)}
                   >
-                    <span className="inline-flex items-center gap-2 w-full">
-                      <span className="text-sm">{regionEmoji(region)}</span>
-                      <span className="font-medium truncate flex-1">
+                    <span className="inline-flex items-center gap-3 w-full">
+                      <span className="text-2xl">{regionEmoji(region)}</span>
+                      <span className="font-bold flex-1">
                         {normalizeRegionName(region)}
                       </span>
                       {selectedRegion === region && (
-                        <span className="text-[10px] font-bold opacity-90">✓</span>
+                        <span className="text-lg font-black">✓</span>
                       )}
                     </span>
                   </button>
