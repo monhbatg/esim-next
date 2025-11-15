@@ -74,14 +74,6 @@ function convertCountryToPlan(
       "Unlimited Data",
     ],
     countriesCovered: countryCode ? [countryCode] : [],
-    id: 0,
-    country: "",
-    region: "",
-    flag: "",
-    data: "",
-    duration: "",
-    price: 0,
-    features: [],
     retailPrice: 0,
   };
 }
