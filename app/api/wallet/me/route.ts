@@ -13,16 +13,9 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    // Call the backend /wallet/me endpoint
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      return NextResponse.json(
-        { success: false, error: 'API URL is not configured' },
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(`${apiUrl}/wallet/me`, {
+    // Call the backend /api/wallet/me endpoint
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/wallet/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

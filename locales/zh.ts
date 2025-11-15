@@ -58,5 +58,23 @@ export default {
   // Common
   data: '数据',
   days: '天',
+  loading: '加载中...',
+  error: '发生错误',
+  tryAgain: '重试',
+  search: '搜索',
+  category: '类别',
+  allCategories: '所有类别',
+  region: '地区',
+  allRegions: '所有地区',
+  clearFilters: '清除筛选',
+  noResultsFound: '未找到结果',
+  noResultsDesc: '未找到匹配的结果。请尝试更改筛选条件。',
+  price: '价格',
+  validFor: '有效期',
+  whatsIncluded: '包含内容：',
+  previous: '上一个',
+  next: '下一个',
+  categoryOf: '类别',
+  of: '/',
 };
 

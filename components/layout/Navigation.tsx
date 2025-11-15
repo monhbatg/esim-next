@@ -24,7 +24,10 @@ export default function Navigation({ onLinkClick, isMobile }: NavigationProps) {
   const t = useTranslations();
   const { isAuthenticated, logout, user } = useAuth();
   
-  const navigationItems = getNavigationItems();
+  // Filter navigation items: hide profile when authenticated, show it when not authenticated
+  const navigationItems = getNavigationItems().filter(item => 
+    item.name === 'profile' ? !isAuthenticated : true
+  );
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof navigationItems[0]) => {
     if (item.protected && !isAuthenticated) {
@@ -48,12 +51,20 @@ export default function Navigation({ onLinkClick, isMobile }: NavigationProps) {
   if (isMobile) {
     return (
       <nav className="flex flex-col space-y-3">
-        {/* User Info (Mobile) */}
+        {/* User Info (Mobile) - Show as clickable profile link when authenticated */}
         {isAuthenticated && user && (
-          <div className="mb-2 pb-3 border-b border-emerald-100">
+          <Link
+            href="/profile"
+            onClick={onLinkClick}
+            className={`mb-2 pb-3 border-b border-emerald-100 block ${
+              pathname === '/profile'
+                ? 'text-emerald-600'
+                : 'text-slate-900'
+            }`}
+          >
             <p className="text-xs text-slate-500 font-semibold">{t('welcomeBack')}</p>
-            <p className="text-lg font-bold text-slate-900">{user.name}</p>
-          </div>
+            <p className="text-lg font-bold">{(user.name || user.firstName || 'Profile').toUpperCase()}</p>
+          </Link>
         )}
 
         {/* Navigation Links (Mobile) */}
@@ -115,9 +126,18 @@ export default function Navigation({ onLinkClick, isMobile }: NavigationProps) {
       
       {isAuthenticated ? (
         <div className="flex items-center gap-4">
-          <span className="hidden lg:inline text-sm text-slate-700 font-semibold">
-            {user?.name}
-          </span>
+          {/* User Name as Profile Link */}
+          <Link
+            href="/profile"
+            onClick={onLinkClick}
+            className={`text-sm font-bold transition-colors hover:text-emerald-600 ${
+              pathname === '/profile'
+                ? 'text-emerald-600'
+                : 'text-slate-700'
+            }`}
+          >
+            {(user?.name || user?.firstName || 'Profile').toUpperCase()}
+          </Link>
           <button
             onClick={handleAuthAction}
             className="inline-flex items-center justify-center rounded-xl border-2 border-emerald-500 px-4 py-2 text-sm font-bold text-emerald-700 transition-all hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-sm hover:shadow-md active:scale-95"

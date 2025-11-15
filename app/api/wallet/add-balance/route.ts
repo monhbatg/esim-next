@@ -33,16 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call the backend /wallet/user-profile/:id/add-balance endpoint
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      return NextResponse.json(
-        { success: false, error: 'API URL is not configured' },
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(`${apiUrl}/wallet/user-profile/${userId}/add-balance`, {
+    // Call the backend /api/wallet/user-profile/:id/add-balance endpoint
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/wallet/user-profile/${userId}/add-balance`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

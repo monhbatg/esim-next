@@ -33,16 +33,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Call the backend /users/password endpoint
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      return NextResponse.json(
-        { success: false, error: 'API URL is not configured' },
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(`${apiUrl}/users/password`, {
+    // Call the backend /api/users/password endpoint
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/users/password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

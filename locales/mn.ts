@@ -58,5 +58,23 @@ export default {
   // Common
   data: 'Өгөгдөл',
   days: 'хоног',
+  loading: 'Уншиж байна...',
+  error: 'Алдаа гарлаа',
+  tryAgain: 'Дахин оролдох',
+  search: 'Хайх',
+  category: 'Ангилал',
+  allCategories: 'Бүх ангилал',
+  region: 'Бүс нутаг',
+  allRegions: 'Бүх бүс нутаг',
+  clearFilters: 'Шүүлтүүрийг цэвэрлэх',
+  noResultsFound: 'Илэрц олдсонгүй',
+  noResultsDesc: 'Таны хайлтын үр дүн олдсонгүй. Шүүлтүүрийг өөрчлөөд дахин оролдоно уу.',
+  price: 'Үнэ',
+  validFor: 'Хүчинтэй хугацаа',
+  whatsIncluded: 'Оруулсан зүйлс:',
+  previous: 'Өмнөх',
+  next: 'Дараах',
+  categoryOf: 'ангилал',
+  of: '/',
 };
 

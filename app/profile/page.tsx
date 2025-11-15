@@ -11,6 +11,30 @@ import WalletCard from "@/components/WalletCard";
 export default function Profile() {
   const { user, fetchUserProfile, isLoading } = useAuth();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [orderNo, setOrderNo] = useState<string | null>(null);
+
+  // Check for success message from checkout
+  useEffect(() => {
+    const orderSuccess = sessionStorage.getItem("orderSuccess");
+    if (orderSuccess) {
+      try {
+        const successData = JSON.parse(orderSuccess);
+        setSuccessMessage(successData.message);
+        setOrderNo(successData.orderNo);
+        // Clear the success message after displaying
+        sessionStorage.removeItem("orderSuccess");
+        // Auto-hide after 10 seconds
+        const timer = setTimeout(() => {
+          setSuccessMessage(null);
+          setOrderNo(null);
+        }, 10000);
+        return () => clearTimeout(timer);
+      } catch (error) {
+        console.error("Failed to parse order success data:", error);
+      }
+    }
+  }, []);
 
   // Refresh profile data when component mounts
   useEffect(() => {
@@ -80,6 +104,64 @@ export default function Profile() {
       <div className="py-20 md:py-28 bg-linear-to-b from-white via-slate-50 to-white">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
+            {/* Success Message Banner */}
+            {successMessage && (
+              <div className="mb-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg shadow-lg animate-fade-in">
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-green-900 mb-1">
+                      Order Successful!
+                    </h3>
+                    <p className="text-green-800 mb-2">{successMessage}</p>
+                    {orderNo && (
+                      <p className="text-sm text-green-700 font-mono">
+                        Order Number: {orderNo}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSuccessMessage(null);
+                      setOrderNo(null);
+                    }}
+                    className="shrink-0 text-green-700 hover:text-green-900 transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <h1 className="text-5xl md:text-6xl font-extrabold mb-12 bg-linear-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
               My Profile
             </h1>
@@ -192,21 +274,6 @@ export default function Profile() {
                         <p className="text-sm text-gray-600">Phone Number</p>
                         <p className="text-lg font-medium">
                           {user.phoneNumber}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
-                    </div>
-                  )}
-                  {user.preferredCurrency && (
-                    <div className="flex items-center justify-between pb-4 border-b">
-                      <div>
-                        <p className="text-sm text-gray-600">
-                          Preferred Currency
-                        </p>
-                        <p className="text-lg font-medium">
-                          {user.preferredCurrency}
                         </p>
                       </div>
                       <Button variant="outline" size="sm">

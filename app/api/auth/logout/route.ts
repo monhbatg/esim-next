@@ -14,9 +14,8 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Call the backend logout endpoint
-    // This would typically call your backend API to invalidate the token/session
-    // For now, we'll just return success since the frontend will handle clearing local storage
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/auth/logout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
