@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const getNavigationItems = () => [
   { name: 'home', href: `/`, protected: false },
   { name: 'marketplace', href: `/marketplace`, protected: false },
+  { name: 'topUp', href: `/guest/topup`, protected: false },
   { name: 'about', href: `/about`, protected: false },
   { name: 'profile', href: `/profile`, protected: true },
 ];
@@ -24,9 +25,9 @@ export default function Navigation({ onLinkClick, isMobile }: NavigationProps) {
   const t = useTranslations();
   const { isAuthenticated, logout, user } = useAuth();
   
-  // Filter navigation items: hide profile when authenticated, show it when not authenticated
+  // Filter navigation items: show profile only when authenticated
   const navigationItems = getNavigationItems().filter(item => 
-    item.name === 'profile' ? !isAuthenticated : true
+    item.name === 'profile' ? isAuthenticated : true
   );
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof navigationItems[0]) => {

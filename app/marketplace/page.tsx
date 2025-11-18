@@ -217,14 +217,10 @@ export default function Marketplace() {
   }, [countriesWithPlans, debouncedQuery, locale]);
 
   const handlePurchase = (plan: EsimPlan) => {
-    if (!isAuthenticated) {
-      sessionStorage.setItem("pendingPurchase", JSON.stringify(plan));
-      sessionStorage.setItem("redirectAfterLogin", "/checkout");
-      router.push("/login");
-    } else {
-      setSelectedPlan(plan);
-      router.push("/checkout");
-    }
+    // Always go to checkout page where user can choose login or guest
+    setSelectedPlan(plan);
+    sessionStorage.setItem("pendingPurchase", JSON.stringify(plan));
+    router.push("/checkout");
   };
 
   const handleCountrySelect = (countryWithPlans: CountryWithPlans) => {
