@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 export default {
   // Header & Navigation
   home: "Home",
@@ -171,7 +172,8 @@ export default {
   topUpSimCard: "Top Up SIM Card",
   topUpSimCardDesc: "Search for your purchased SIM cards and add more data",
   searchForSimCards: "Search for Your SIM Cards",
-  searchForSimCardsDesc: "Enter your phone number or email to find your purchased SIM cards",
+  searchForSimCardsDesc:
+    "Enter your phone number or email to find your purchased SIM cards",
   invalidIdentifier: "Please enter a valid phone number or email address",
   searching: "Searching...",
   noSimCardsFound: "No SIM cards found for this phone number or email",

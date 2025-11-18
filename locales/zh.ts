@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 export default {
   // Header & Navigation
   home: "首页",
@@ -92,7 +93,6 @@ export default {
   continueAsGuestDesc:
     "无需账户快速结账。使用QPay支付并通过电子邮件接收您的eSIM。",
   continue: "继续",
-  loading: "加载中...",
 
   // Guest Checkout
   guestCheckout: "访客结账",

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 export default {
   // Header & Navigation
   home: "Нүүр",
@@ -96,8 +97,6 @@ export default {
   continueAsGuestDesc:
     "Бүртгэлгүйгээр хурдан төлбөр. QPay-аар төлж, eSIM-ээ имэйлээр авах.",
   continue: "Үргэлжлүүлэх",
-  loading: "Уншиж байна...",
-
   // Guest Checkout
   guestCheckout: "Зочин төлбөр",
   guestCheckoutSubtitle: "Хэдхэн хялбар алхамаар худалдан авалтаа дуусгана уу",
@@ -169,7 +168,8 @@ export default {
   topUpSimCard: "SIM карт цэнэглэх",
   topUpSimCardDesc: "Худалдан авсан SIM картуудаа хайж илүү их өгөгдөл нэмэх",
   searchForSimCards: "SIM картуудаа хайх",
-  searchForSimCardsDesc: "Худалдан авсан SIM картуудаа олохын тулд утасны дугаар эсвэл имэйл хаягаа оруулна уу",
+  searchForSimCardsDesc:
+    "Худалдан авсан SIM картуудаа олохын тулд утасны дугаар эсвэл имэйл хаягаа оруулна уу",
   invalidIdentifier: "Зөв утасны дугаар эсвэл имэйл хаяг оруулна уу",
   searching: "Хайж байна...",
   noSimCardsFound: "Энэ утасны дугаар эсвэл имэйлд олдсон SIM карт байхгүй",
