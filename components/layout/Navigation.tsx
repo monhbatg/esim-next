@@ -10,6 +10,9 @@ const getNavigationItems = () => [
   { name: 'marketplace', href: `/marketplace`, protected: false },
   { name: 'about', href: `/about`, protected: false },
   { name: 'profile', href: `/profile`, protected: true },
+  { name: 'myesim', href: `/myesim`, protected: true },
+  { name: 'myorder', href: `/myorder`, protected: true },
+  { name: 'myplans', href: `/myplans`, protected: true },
 ];
 
 interface NavigationProps {
