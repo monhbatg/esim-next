@@ -4,28 +4,24 @@ import Card from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCheckout } from "@/contexts/CheckoutContext";
 import { useTranslations } from "@/contexts/LocaleContext";
-import { EsimPlan } from "@/types";
+import { PlanWithPackage } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Checkout() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { selectedPlan, setSelectedPlan } = useCheckout();
   const t = useTranslations();
-  const [plan, setPlan] = useState<EsimPlan | null>(selectedPlan);
-
   useEffect(() => {
     // Load plan from context or sessionStorage
     if (selectedPlan) {
-      setPlan(selectedPlan);
     } else {
       const pendingPurchase = sessionStorage.getItem("pendingPurchase");
       if (pendingPurchase) {
         try {
-          const parsedPlan = JSON.parse(pendingPurchase) as EsimPlan;
-          setPlan(parsedPlan);
+          const parsedPlan = JSON.parse(pendingPurchase) as PlanWithPackage;
           setSelectedPlan(parsedPlan);
         } catch (error) {
           console.error("Failed to parse pending purchase:", error);
@@ -37,13 +33,13 @@ export default function Checkout() {
     }
   }, [selectedPlan, setSelectedPlan, router]);
 
-  if (!plan) {
+  if (!selectedPlan) {
     return (
       <div className="py-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-slate-600">{t("loading")}</p>
-          </div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">{t("loading")}</p>
+        </div>
       </div>
     );
   }
@@ -82,25 +78,25 @@ export default function Checkout() {
           </div>
 
           {/* Plan Summary */}
-          {plan && (
+          {selectedPlan && (
             <Card className="mb-8">
               <div className="flex items-start gap-4">
-                <div className="text-4xl shrink-0">{plan.flag}</div>
+                <div className="text-4xl shrink-0">{selectedPlan.plan.flag}</div>
                 <div className="flex-1">
                   <h3 className="font-bold text-lg text-slate-900 mb-1">
-                    {plan.country}
+                    {selectedPlan.plan.country}
                   </h3>
-                  {plan.region && (
+                  {selectedPlan.plan.region && (
                     <p className="text-xs text-slate-500 mb-2 uppercase tracking-wide">
-                      {plan.region}
+                      {selectedPlan.plan.region}
                     </p>
                   )}
                   <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-medium">
-                      {plan.data}
+                      {selectedPlan.plan.data}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-lg font-medium">
-                      {plan.duration}
+                      {selectedPlan.plan.duration}
                     </span>
                   </div>
                   <p className="text-xl font-bold text-emerald-700">
@@ -108,7 +104,7 @@ export default function Checkout() {
                       style: "currency",
                       currency: "USD",
                       minimumFractionDigits: 2,
-                    }).format(plan.retailPrice)}
+                    }).format(Number(selectedPlan.package.buyPrice))}
                   </p>
                 </div>
               </div>
@@ -125,7 +121,10 @@ export default function Checkout() {
                 if (isAuthenticated) {
                   router.push("/checkout/authenticated");
                 } else {
-                  sessionStorage.setItem("redirectAfterLogin", "/checkout/authenticated");
+                  sessionStorage.setItem(
+                    "redirectAfterLogin",
+                    "/checkout/authenticated"
+                  );
                   router.push("/login");
                 }
               }}

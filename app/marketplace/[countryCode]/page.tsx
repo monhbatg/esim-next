@@ -191,7 +191,7 @@ function convertPackageToPlan(
   }
 }
 
-interface PlanWithPackage {
+export interface PlanWithPackage {
   plan: EsimPlan;
   package: EsimPackage;
 }
@@ -221,7 +221,10 @@ export default function CountryPlansPage() {
     min: 0,
     max: 1000, // in GB
   });
-  const [durationRange, setDurationRange] = useState<{ min: number; max: number }>({
+  const [durationRange, setDurationRange] = useState<{
+    min: number;
+    max: number;
+  }>({
     min: 0,
     max: 365, // in days
   });
@@ -261,7 +264,9 @@ export default function CountryPlansPage() {
 
       // Calculate duration range
       const durations = packages
-        .map((p) => extractDurationDays(p.duration || 0, p.durationUnit || "days"))
+        .map((p) =>
+          extractDurationDays(p.duration || 0, p.durationUnit || "days")
+        )
         .filter((d) => d > 0);
       if (durations.length > 0) {
         const maxDuration = Math.max(...durations);
@@ -417,7 +422,9 @@ export default function CountryPlansPage() {
         item.package.duration || 0,
         item.package.durationUnit || "days"
       );
-      return durationDays >= durationRange.min && durationDays <= durationRange.max;
+      return (
+        durationDays >= durationRange.min && durationDays <= durationRange.max
+      );
     });
 
     // Sort plans
@@ -449,11 +456,10 @@ export default function CountryPlansPage() {
       return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
     });
 
-    console.log("Filtered plans:", filtered.length);
     return filtered;
   }, [countryPlans, priceRange, dataRange, durationRange, sortBy, sortOrder]);
 
-  const handlePurchase = (plan: EsimPlan) => {
+  const handlePurchase = (plan: PlanWithPackage) => {
     // Always go to checkout page where user can choose login or guest
     setSelectedPlan(plan);
     sessionStorage.setItem("pendingPurchase", JSON.stringify(plan));
@@ -583,11 +589,18 @@ export default function CountryPlansPage() {
                   </svg>
                 </div>
                 <select
-                  value={priceRange.max >= 10000000 ? "all" : priceRange.max.toString()}
+                  value={
+                    priceRange.max >= 10000000
+                      ? "all"
+                      : priceRange.max.toString()
+                  }
                   onChange={(e) =>
                     setPriceRange({
                       ...priceRange,
-                      max: e.target.value === "all" ? 10000000 : Number(e.target.value),
+                      max:
+                        e.target.value === "all"
+                          ? 10000000
+                          : Number(e.target.value),
                     })
                   }
                   className="w-full pl-9 pr-8 py-2.5 text-sm rounded-lg border-2 border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300/50 focus:border-emerald-500 transition-all shadow-sm hover:shadow-md cursor-pointer appearance-none"
@@ -599,12 +612,24 @@ export default function CountryPlansPage() {
                       ? "所有价格"
                       : "All Prices"}
                   </option>
-                  <option value="50000">{priceRange.min.toLocaleString()} - 50,000 ₮</option>
-                  <option value="100000">{priceRange.min.toLocaleString()} - 100,000 ₮</option>
-                  <option value="200000">{priceRange.min.toLocaleString()} - 200,000 ₮</option>
-                  <option value="500000">{priceRange.min.toLocaleString()} - 500,000 ₮</option>
-                  <option value="1000000">{priceRange.min.toLocaleString()} - 1,000,000 ₮</option>
-                  <option value="2000000">{priceRange.min.toLocaleString()} - 2,000,000 ₮</option>
+                  <option value="50000">
+                    {priceRange.min.toLocaleString()} - 50,000 ₮
+                  </option>
+                  <option value="100000">
+                    {priceRange.min.toLocaleString()} - 100,000 ₮
+                  </option>
+                  <option value="200000">
+                    {priceRange.min.toLocaleString()} - 200,000 ₮
+                  </option>
+                  <option value="500000">
+                    {priceRange.min.toLocaleString()} - 500,000 ₮
+                  </option>
+                  <option value="1000000">
+                    {priceRange.min.toLocaleString()} - 1,000,000 ₮
+                  </option>
+                  <option value="2000000">
+                    {priceRange.min.toLocaleString()} - 2,000,000 ₮
+                  </option>
                   <option value="10000000">0 - Unlimited</option>
                 </select>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
@@ -642,11 +667,16 @@ export default function CountryPlansPage() {
                   </svg>
                 </div>
                 <select
-                  value={dataRange.max >= 1000 ? "all" : dataRange.max.toString()}
+                  value={
+                    dataRange.max >= 1000 ? "all" : dataRange.max.toString()
+                  }
                   onChange={(e) =>
                     setDataRange({
                       ...dataRange,
-                      max: e.target.value === "all" ? 1000 : Number(e.target.value),
+                      max:
+                        e.target.value === "all"
+                          ? 1000
+                          : Number(e.target.value),
                     })
                   }
                   className="w-full pl-9 pr-8 py-2.5 text-sm rounded-lg border-2 border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300/50 focus:border-emerald-500 transition-all shadow-sm hover:shadow-md cursor-pointer appearance-none"
@@ -704,11 +734,16 @@ export default function CountryPlansPage() {
                   </svg>
                 </div>
                 <select
-                  value={durationRange.max >= 365 ? "all" : durationRange.max.toString()}
+                  value={
+                    durationRange.max >= 365
+                      ? "all"
+                      : durationRange.max.toString()
+                  }
                   onChange={(e) =>
                     setDurationRange({
                       ...durationRange,
-                      max: e.target.value === "all" ? 365 : Number(e.target.value),
+                      max:
+                        e.target.value === "all" ? 365 : Number(e.target.value),
                     })
                   }
                   className="w-full pl-9 pr-8 py-2.5 text-sm rounded-lg border-2 border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300/50 focus:border-emerald-500 transition-all shadow-sm hover:shadow-md cursor-pointer appearance-none"
@@ -868,15 +903,15 @@ export default function CountryPlansPage() {
               {(priceRange.max < 10000000 ||
                 dataRange.max < 1000 ||
                 durationRange.max < 365) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPriceRange({ min: 0, max: 10000000 });
-                      setDataRange({ min: 0, max: 1000 });
-                      setDurationRange({ min: 0, max: 365 });
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm"
-                  >
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPriceRange({ min: 0, max: 10000000 });
+                    setDataRange({ min: 0, max: 1000 });
+                    setDurationRange({ min: 0, max: 365 });
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm"
+                >
                   <span className="text-slate-600">
                     <svg
                       className="w-4 h-4"
@@ -988,10 +1023,7 @@ export default function CountryPlansPage() {
                       </p>
                       <div className="flex items-baseline justify-center gap-2">
                         <span className="text-3xl font-bold text-slate-900 tracking-tight">
-                          {formatCurrency(
-                            item.plan.retailPrice,
-                            "MNT"
-                          )}
+                          {formatCurrency(item.package.buyPrice, "MNT")}
                         </span>
                       </div>
                     </div>
@@ -1050,7 +1082,7 @@ export default function CountryPlansPage() {
                     {/* Button */}
                     <Button
                       className="w-full py-3.5 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-sm hover:shadow-md mt-auto"
-                      onClick={() => handlePurchase(item.plan)}
+                      onClick={() => handlePurchase(item)}
                     >
                       {t("purchasePlan")}
                     </Button>

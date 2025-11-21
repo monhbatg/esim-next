@@ -52,6 +52,8 @@ export default {
   marketplaceTitle: "eSIM Зах зээл",
   marketplaceSubtitle:
     "Дэлхийн хаана ч очих өргөн сонголттой багцуудыг үзээрэй",
+  countries: "Улсууд",
+  bundles: "Багцууд",
   all: "Бүгд",
   northAmerica: "Хойд Америк",
   europe: "Европ",
@@ -127,9 +129,30 @@ export default {
   privacyPolicy: "Нууцлалын бодлого",
   payWithQPay: "QPay-аар төлөх",
   processing: "Боловсруулж байна...",
+  paymentInvoiceReady: "Төлбөрийн нэхэмжлэл бэлэн боллоо",
+  scanQrCodeToPay: "QR кодыг уншуулж төлнө үү",
+  scanQrCodeDesc:
+    "QPay дэмждэг банкны апп-аар скан хийж эсвэл доорх холбоосоор нээж төлбөрөө хийнэ үү.",
+  openInBankApp: "Банкны апп-аар нээх",
+  qrCodeExpires: "QR код 15 минутын дараа хүчингүй болно",
+  invoiceId: "Нэхэмжлэлийн ID",
+  shortLink: "Богино холбоос",
+  qrPayload: "QR өгөгдөл",
+  copy: "Хуулах",
+  copied: "Хуулсан!",
+  mobilePaymentHint:
+    "Гар утас ашиглаж байна уу? Дээрх товчийг дарж банкны апп-аа нээгээрэй.",
+  bankAppPaymentsTitle: "Банкны апп-уудаар төлөх",
+  bankAppPaymentsDesc:
+    "Доорх дэмжигдсэн хэтэвчнээс сонгож төлбөрөө шууд нээгээрэй.",
+  missingPackageCode: "Сонгосон багц идэвхгүй байна. Өөр багц сонгоно уу.",
+  paymentDetailsMissing:
+    "Төлбөрийн мэдээллийг авч чадсангүй. Дахин оролдоно уу.",
 
   // Check Payment
   checkPaymentStatus: "Төлбөрийн статус шалгах",
+  paymentNotCompleted: "Төлбөр баталгаажаагүй байна. Төлбөрөө дуусгана уу.",
+  checkPaymentError: "Төлбөрийн статус шалгахад алдаа гарлаа. Дахин оролдоно уу.",
   checkPaymentDesc:
     "Захиалгын статусаа шалгахын тулд утасны дугаар эсвэл имэйл хаягаа оруулна уу",
   phoneOrEmail: "Утасны дугаар эсвэл Имэйл",

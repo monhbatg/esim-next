@@ -285,6 +285,7 @@ export interface EsimPackage {
   durationUnit: string;
   location: string;
   description: string;
+  buyPrice: string;
   activeType: number;
   favorite: boolean;
   retailPrice: number;
@@ -292,3 +293,8 @@ export interface EsimPackage {
   locationNetworkList?: PackageLocationNetwork[];
 }
 
+
+export interface PlanWithPackage {
+  plan: EsimPlan;
+  package: EsimPackage;
+}

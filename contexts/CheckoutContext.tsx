@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { EsimPlan } from '@/types';
+import { PlanWithPackage } from "@/types";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 interface CheckoutContextType {
-  selectedPlan: EsimPlan | null;
-  setSelectedPlan: (plan: EsimPlan | null) => void;
+  selectedPlan: PlanWithPackage | null;
+  setSelectedPlan: (plan: PlanWithPackage | null) => void;
   clearCheckout: () => void;
 }
 
-const CheckoutContext = createContext<CheckoutContextType | undefined>(undefined);
+const CheckoutContext = createContext<CheckoutContextType | undefined>(
+  undefined
+);
 
 export function CheckoutProvider({ children }: { children: ReactNode }) {
-  const [selectedPlan, setSelectedPlan] = useState<EsimPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanWithPackage | null>(
+    null
+  );
 
   const clearCheckout = () => {
     setSelectedPlan(null);
@@ -34,8 +38,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
 export function useCheckout() {
   const context = useContext(CheckoutContext);
   if (context === undefined) {
-    throw new Error('useCheckout must be used within a CheckoutProvider');
+    throw new Error("useCheckout must be used within a CheckoutProvider");
   }
   return context;
 }
-

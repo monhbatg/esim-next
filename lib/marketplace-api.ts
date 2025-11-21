@@ -253,6 +253,223 @@ export const marketplaceApi = {
   },
 
   /**
+   * Helper function to extract country code from image path
+   */
+  getCountryCodeFromImage: (image: string | null): string | null => {
+    if (!image) return null;
+    const match = image.match(/\/([a-z]{2})\.png$/i);
+    return match ? match[1].toUpperCase() : null;
+  },
+
+  /**
+   * Get bundles (packages from multiple countries)
+   * TODO: Connect with API when backend is ready
+   * Currently returns dummy data for development
+   */
+  getBundles: async (): Promise<EsimPackage[]> => {
+    // Dummy data - replace with actual API call when backend is ready
+    const dummyBundles: EsimPackage[] = [
+      {
+        packageCode: "BUNDLE001",
+        slug: "europe-7day-unlimited",
+        name: "Europe 7-Day Unlimited",
+        price: 150000,
+        currencyCode: "MNT",
+        volume: 0, // Unlimited
+        smsStatus: 0,
+        dataType: 1, // Unlimited
+        unusedValidTime: 7,
+        duration: 7,
+        durationUnit: "days",
+        location: "Europe",
+        description: "Unlimited data across 30+ European countries. Perfect for travelers.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 150000,
+        speed: "4G/5G",
+      },
+      {
+        packageCode: "BUNDLE002",
+        slug: "asia-15day-10gb",
+        name: "Asia 15-Day 10GB",
+        price: 120000,
+        currencyCode: "MNT",
+        volume: 10737418240, // 10GB in bytes
+        smsStatus: 0,
+        dataType: 0,
+        unusedValidTime: 15,
+        duration: 15,
+        durationUnit: "days",
+        location: "Asia",
+        description: "10GB data valid for 15 days across major Asian countries.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 120000,
+        speed: "4G",
+      },
+      {
+        packageCode: "BUNDLE003",
+        slug: "global-30day-20gb",
+        name: "Global 30-Day 20GB",
+        price: 250000,
+        currencyCode: "MNT",
+        volume: 21474836480, // 20GB in bytes
+        smsStatus: 0,
+        dataType: 0,
+        unusedValidTime: 30,
+        duration: 30,
+        durationUnit: "days",
+        location: "Global",
+        description: "20GB data for 30 days. Works in 50+ countries worldwide.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 250000,
+        speed: "4G/5G",
+      },
+      {
+        packageCode: "BUNDLE004",
+        slug: "usa-canada-14day-unlimited",
+        name: "USA & Canada 14-Day Unlimited",
+        price: 180000,
+        currencyCode: "MNT",
+        volume: 0, // Unlimited
+        smsStatus: 0,
+        dataType: 1,
+        unusedValidTime: 14,
+        duration: 14,
+        durationUnit: "days",
+        location: "USA & Canada",
+        description: "Unlimited high-speed data in USA and Canada for 14 days.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 180000,
+        speed: "5G",
+      },
+      {
+        packageCode: "BUNDLE005",
+        slug: "middle-east-10day-5gb",
+        name: "Middle East 10-Day 5GB",
+        price: 95000,
+        currencyCode: "MNT",
+        volume: 5368709120, // 5GB in bytes
+        smsStatus: 0,
+        dataType: 0,
+        unusedValidTime: 10,
+        duration: 10,
+        durationUnit: "days",
+        location: "Middle East",
+        description: "5GB data for 10 days across Middle Eastern countries.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 95000,
+        speed: "4G",
+      },
+      {
+        packageCode: "BUNDLE006",
+        slug: "oceania-21day-15gb",
+        name: "Oceania 21-Day 15GB",
+        price: 200000,
+        currencyCode: "MNT",
+        volume: 16106127360, // 15GB in bytes
+        smsStatus: 0,
+        dataType: 0,
+        unusedValidTime: 21,
+        duration: 21,
+        durationUnit: "days",
+        location: "Oceania",
+        description: "15GB data valid for 21 days in Australia, New Zealand, and Pacific islands.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 200000,
+        speed: "4G/5G",
+      },
+      {
+        packageCode: "BUNDLE007",
+        slug: "south-america-30day-unlimited",
+        name: "South America 30-Day Unlimited",
+        price: 220000,
+        currencyCode: "MNT",
+        volume: 0, // Unlimited
+        smsStatus: 0,
+        dataType: 1,
+        unusedValidTime: 30,
+        duration: 30,
+        durationUnit: "days",
+        location: "South America",
+        description: "Unlimited data across South American countries for 30 days.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 220000,
+        speed: "4G",
+      },
+      {
+        packageCode: "BUNDLE008",
+        slug: "africa-14day-8gb",
+        name: "Africa 14-Day 8GB",
+        price: 110000,
+        currencyCode: "MNT",
+        volume: 8589934592, // 8GB in bytes
+        smsStatus: 0,
+        dataType: 0,
+        unusedValidTime: 14,
+        duration: 14,
+        durationUnit: "days",
+        location: "Africa",
+        description: "8GB data for 14 days across major African countries.",
+        activeType: 1,
+        favorite: false,
+        retailPrice: 110000,
+        speed: "4G",
+      },
+    ];
+
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    return dummyBundles;
+
+    /* TODO: Replace above with actual API call when backend is ready
+    try {
+      // First, get all countries from marketplace
+      const marketplaceData = await marketplaceApi.getMarketplace();
+      
+      // Extract unique country codes
+      const countryCodes = new Set<string>();
+      marketplaceData.forEach((category) => {
+        category.countries.forEach((country) => {
+          const code = country.country_code || marketplaceApi.getCountryCodeFromImage(country.image);
+          if (code) {
+            countryCodes.add(code.toUpperCase());
+          }
+        });
+      });
+
+      // Fetch packages from all countries in parallel (limit to first 20 countries for performance)
+      const countryCodesArray = Array.from(countryCodes).slice(0, 20);
+      const packagePromises = countryCodesArray.map((code) =>
+        marketplaceApi.getPackages(code).catch((err) => {
+          console.warn(`Failed to fetch packages for ${code}:`, err);
+          return [];
+        })
+      );
+
+      const packagesArrays = await Promise.all(packagePromises);
+      const allPackages = packagesArrays.flat();
+
+      // Remove duplicates based on packageCode
+      const uniquePackages = Array.from(
+        new Map(allPackages.map((pkg) => [pkg.packageCode, pkg])).values()
+      );
+
+      return uniquePackages;
+    } catch (error) {
+      console.error('getBundles error:', error);
+      throw error;
+    }
+    */
+  },
+
+  /**
    * Get eSIM packages for a specific country code
    * Fetches real package data from esimaccess API
    * Uses fetch directly for Next.js API routes to avoid baseURL conflicts

@@ -5,12 +5,74 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import { useCheckout } from "@/contexts/CheckoutContext";
 import { useTranslations } from "@/contexts/LocaleContext";
-import { EsimPlan } from "@/types";
+import { EsimPackage, EsimPlan, PlanWithPackage } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 type Step = 1 | 2 | 3 | 4;
+
+type PaymentAppLink = {
+  name: string;
+  description?: string;
+  logo?: string;
+  link: string;
+};
+
+type NormalizedPlan = EsimPlan & {
+  package?: EsimPackage;
+};
+
+type PaymentDetails = {
+  invoice_id: string;
+  qr_image: string;
+  qr_link: string;
+  qr_text?: string;
+  qPay_shortUrl?: string;
+  urls?: PaymentAppLink[];
+  customerId?: string;
+  internalInvoiceId?: string;
+};
+
+const isPlanWithPackage = (value: unknown): value is PlanWithPackage => {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("plan" in value) ||
+    !("package" in value)
+  ) {
+    return false;
+  }
+
+  const typedValue = value as {
+    plan?: unknown;
+    package?: unknown;
+  };
+
+  return (
+    typeof typedValue.plan === "object" &&
+    typedValue.plan !== null &&
+    typeof typedValue.package === "object" &&
+    typedValue.package !== null
+  );
+};
+
+const normalizePlanData = (
+  incoming: PlanWithPackage | EsimPlan | null
+): NormalizedPlan | null => {
+  if (!incoming) {
+    return null;
+  }
+
+  if (isPlanWithPackage(incoming)) {
+    return {
+      ...incoming.plan,
+      package: incoming.package,
+    };
+  }
+
+  return incoming as NormalizedPlan;
+};
 
 export default function GuestCheckout() {
   const router = useRouter();
@@ -23,39 +85,72 @@ export default function GuestCheckout() {
   const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(
+    null
+  );
+  const [resolvedPlan, setResolvedPlan] = useState<NormalizedPlan | null>(
+    normalizePlanData(selectedPlan)
+  );
+  const [isPlanResolved, setIsPlanResolved] = useState<boolean>(
+    Boolean(selectedPlan)
+  );
 
   useEffect(() => {
-    // If no plan selected, try to get from sessionStorage
-    if (!selectedPlan) {
-      const pendingPurchase = sessionStorage.getItem("pendingPurchase");
-      if (pendingPurchase) {
-        try {
-          const plan = JSON.parse(pendingPurchase);
-          // Store in context if needed
-        } catch (error) {
-          console.error("Failed to parse pending purchase:", error);
-        }
-      } else {
-        router.push("/marketplace");
-      }
+    if (selectedPlan) {
+      setResolvedPlan(normalizePlanData(selectedPlan));
+      setIsPlanResolved(true);
+      return;
     }
-  }, [selectedPlan, router]);
 
-  const plan = selectedPlan || (() => {
-    const pendingPurchase = sessionStorage.getItem("pendingPurchase");
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const pendingPurchase = window.sessionStorage.getItem("pendingPurchase");
     if (pendingPurchase) {
       try {
-        return JSON.parse(pendingPurchase) as EsimPlan;
-      } catch {
-        return null;
+        const parsed = JSON.parse(pendingPurchase) as
+          | PlanWithPackage
+          | EsimPlan;
+        setResolvedPlan(normalizePlanData(parsed));
+      } catch (error) {
+        console.error("Failed to parse pending purchase:", error);
       }
+    } else {
+      router.push("/marketplace");
     }
-    return null;
-  })();
 
+    setIsPlanResolved(true);
+  }, [selectedPlan, router]);
+
+  const plan = resolvedPlan;
+
+
+  if (!plan && !isPlanResolved) {
+    return null;
+  }
   if (!plan) {
     return null;
   }
+
+  const planDescription = [plan.country, plan.data, plan.duration]
+    .filter(Boolean)
+    .join(" · ");
+  const amountToCharge = Number(plan?.package?.buyPrice ?? 0);
+
+  const getQrImageSrc = () => {
+    if (!paymentDetails?.qr_image) {
+      return "";
+    }
+    return paymentDetails.qr_image.startsWith("data:")
+      ? paymentDetails.qr_image
+      : `data:image/png;base64,${paymentDetails.qr_image}`;
+  };
+
+  const resetPaymentArtifacts = () => {
+    setPaymentDetails(null);
+  };
+  const qrImageSrc = getQrImageSrc();
 
   const validatePhone = (value: string): boolean => {
     // Basic phone validation - adjust regex as needed
@@ -71,7 +166,7 @@ export default function GuestCheckout() {
   const handlePhoneNext = () => {
     setPhoneError("");
     const trimmedPhone = phone.trim();
-    
+
     if (!trimmedPhone) {
       setPhoneError(t("phoneRequired"));
       return;
@@ -88,7 +183,7 @@ export default function GuestCheckout() {
   const handleEmailNext = () => {
     setEmailError("");
     const trimmedEmail = email.trim();
-    
+
     if (!trimmedEmail) {
       setEmailError(t("emailRequired"));
       return;
@@ -105,47 +200,95 @@ export default function GuestCheckout() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    resetPaymentArtifacts();
+    const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
+
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/guest/checkout", {
+      const packageCode = plan.package?.packageCode || plan.packageCode;
+
+      if (!packageCode) {
+        throw new Error(t("missingPackageCode"));
+      }
+
+      if (typeof amountToCharge !== "number" || Number.isNaN(amountToCharge)) {
+        throw new Error(t("paymentDetailsMissing"));
+      }
+
+      const payload = {
+        phoneNumber: trimmedPhone,
+        email: trimmedEmail,
+        amount: amountToCharge,
+        packageCode,
+        description: planDescription || "eSIM Purchase",
+      };
+
+      const response = await fetch("/api/customer/transactions/purchase", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          phone: phone.trim(),
-          email: email.trim(),
-          plan: {
-            packageCode: plan.packageCode,
-            price: plan.price,
-            retailPrice: plan.retailPrice,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const purchaseData = rawData?.data ?? rawData;
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to create checkout");
+      if (!response.ok) {
+        throw new Error(
+          purchaseData?.error ||
+            rawData?.error ||
+            rawData?.message ||
+            t("error")
+        );
       }
 
-      // Redirect to QPay payment URL
-      if (data.data?.paymentUrl) {
-        window.location.href = data.data.paymentUrl;
-      } else {
-        throw new Error("No payment URL received");
+      if (
+        !purchaseData?.invoice_id ||
+        !purchaseData?.qr_image ||
+        !(purchaseData?.qr_link || purchaseData?.qPay_shortUrl)
+      ) {
+        throw new Error(t("paymentDetailsMissing"));
       }
+
+      const normalizedUrls: PaymentAppLink[] | undefined = Array.isArray(
+        purchaseData?.urls
+      )
+        ? (purchaseData.urls as Array<Partial<PaymentAppLink> | null>)
+            .filter((app): app is Partial<PaymentAppLink> & { link: string } =>
+              Boolean(app?.link && typeof app.link === "string")
+            )
+            .map((app) => ({
+              name: app?.name || app?.description || "Bank App",
+              description: app?.description,
+              logo: app?.logo,
+              link: app.link,
+            }))
+        : undefined;
+
+      setPaymentDetails({
+        invoice_id: purchaseData.invoice_id,
+        qr_image: purchaseData.qr_image,
+        qr_link: purchaseData.qr_link || purchaseData.qPay_shortUrl || "",
+        qr_text: purchaseData.qr_text,
+        qPay_shortUrl: purchaseData.qPay_shortUrl,
+        urls: normalizedUrls,
+        customerId: purchaseData.customerId,
+        internalInvoiceId: purchaseData.internalInvoiceId,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("error"));
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("mn-MN", {
       style: "currency",
-      currency: "USD",
+      currency: "MNT",
       minimumFractionDigits: 2,
     }).format(value);
   };
@@ -153,7 +296,7 @@ export default function GuestCheckout() {
   const progressPercentage = ((currentStep - 1) / 3) * 100;
 
   return (
-    <div className="py-12 md:py-20 bg-gradient-to-b from-white via-slate-50 to-white min-h-screen">
+    <div className="py-12 md:py-20 bg-linear-to-b from-white via-slate-50 to-white min-h-screen">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
@@ -177,7 +320,7 @@ export default function GuestCheckout() {
               </svg>
               <span className="font-medium">{t("back")}</span>
             </Link>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-2 bg-linear-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent">
               {t("guestCheckout")}
             </h1>
             <p className="text-slate-600 text-lg">
@@ -195,9 +338,9 @@ export default function GuestCheckout() {
                 {Math.round(progressPercentage)}% {t("complete")}
               </span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2.5">
+              <div className="w-full bg-slate-200 rounded-full h-2.5">
               <div
-                className="bg-gradient-to-r from-blue-500 to-cyan-600 h-2.5 rounded-full transition-all duration-300"
+                className="bg-linear-to-r from-blue-500 to-cyan-600 h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
@@ -250,7 +393,7 @@ export default function GuestCheckout() {
           {currentStep === 1 && (
             <Card>
               <div className="mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -268,9 +411,7 @@ export default function GuestCheckout() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   {t("enterPhoneNumber")}
                 </h2>
-                <p className="text-slate-600">
-                  {t("enterPhoneDesc")}
-                </p>
+                <p className="text-slate-600">{t("enterPhoneDesc")}</p>
               </div>
 
               <form
@@ -304,7 +445,7 @@ export default function GuestCheckout() {
           {currentStep === 2 && (
             <Card>
               <div className="mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -322,9 +463,7 @@ export default function GuestCheckout() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   {t("enterEmail")}
                 </h2>
-                <p className="text-slate-600">
-                  {t("enterEmailDesc")}
-                </p>
+                <p className="text-slate-600">{t("enterEmailDesc")}</p>
               </div>
 
               <form
@@ -352,7 +491,10 @@ export default function GuestCheckout() {
                     type="button"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => setCurrentStep(1)}
+                    onClick={() => {
+                      resetPaymentArtifacts();
+                      setCurrentStep(1);
+                    }}
                   >
                     {t("back")}
                   </Button>
@@ -368,7 +510,7 @@ export default function GuestCheckout() {
           {currentStep === 3 && (
             <Card>
               <div className="mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -386,14 +528,12 @@ export default function GuestCheckout() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   {t("reviewOrder")}
                 </h2>
-                <p className="text-slate-600">
-                  {t("reviewOrderDesc")}
-                </p>
+                <p className="text-slate-600">{t("reviewOrderDesc")}</p>
               </div>
 
               <div className="space-y-6">
                 {/* Plan Details */}
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
+                <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="text-4xl shrink-0">{plan.flag}</div>
                     <div className="flex-1">
@@ -459,11 +599,11 @@ export default function GuestCheckout() {
                 </div>
 
                 {/* Total */}
-                <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-6 text-white">
+                <div className="bg-linear-to-br from-blue-500 to-cyan-600 rounded-xl p-6 text-white">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-semibold">{t("total")}</span>
                     <span className="text-3xl font-bold">
-                      {formatCurrency(plan.retailPrice)}
+                      {formatCurrency(amountToCharge)}
                     </span>
                   </div>
                 </div>
@@ -473,7 +613,10 @@ export default function GuestCheckout() {
                     type="button"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => setCurrentStep(2)}
+                    onClick={() => {
+                      resetPaymentArtifacts();
+                      setCurrentStep(2);
+                    }}
                   >
                     {t("back")}
                   </Button>
@@ -481,7 +624,10 @@ export default function GuestCheckout() {
                     type="button"
                     className="flex-1"
                     size="lg"
-                    onClick={() => setCurrentStep(4)}
+                    onClick={() => {
+                      resetPaymentArtifacts();
+                      setCurrentStep(4);
+                    }}
                   >
                     {t("continue")}
                   </Button>
@@ -494,7 +640,7 @@ export default function GuestCheckout() {
           {currentStep === 4 && (
             <Card>
               <div className="mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -512,86 +658,219 @@ export default function GuestCheckout() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   {t("confirmAndPay")}
                 </h2>
-                <p className="text-slate-600">
-                  {t("confirmAndPayDesc")}
-                </p>
+                <p className="text-slate-600">{t("confirmAndPayDesc")}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Terms */}
-                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    className="mt-1 h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
-                    required
-                  />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm text-slate-700 cursor-pointer"
-                  >
-                    {t("agreeToTerms")}{" "}
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-semibold underline"
+{!paymentDetails ? (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Terms */}
+                  <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      className="mt-1 h-5 w-5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
+                      required
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-sm text-slate-700 cursor-pointer"
                     >
-                      {t("termsOfService")}
-                    </a>{" "}
-                    {t("and")}{" "}
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-700 font-semibold underline"
-                    >
-                      {t("privacyPolicy")}
-                    </a>
-                  </label>
-                </div>
+                      {t("agreeToTerms")}{" "}
+                      <a
+                        href="#"
+                        className="text-blue-600 hover:text-blue-700 font-semibold underline"
+                      >
+                        {t("termsOfService")}
+                      </a>{" "}
+                      {t("and")}{" "}
+                      <a
+                        href="#"
+                        className="text-blue-600 hover:text-blue-700 font-semibold underline"
+                      >
+                        {t("privacyPolicy")}
+                      </a>
+                    </label>
+                  </div>
 
-                <div className="flex gap-4">
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        resetPaymentArtifacts();
+                        setCurrentStep(3);
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      {t("back")}
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg
+                            className="animate-spin h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          {t("processing")}
+                        </span>
+                      ) : (
+                        t("payWithQPay")
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex justify-center">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setCurrentStep(3)}
-                    disabled={isSubmitting}
-                  >
-                    {t("back")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1"
                     size="lg"
-                    disabled={isSubmitting}
+                    className="w-full max-w-md"
+                    onClick={async () => {
+                      if (!paymentDetails?.invoice_id) return;
+                      
+                      try {
+                        const response = await fetch("/api/guest/check-payment", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ identifier: paymentDetails.invoice_id }),
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success && result.data?.status === "PAID") {
+                          // Payment successful, redirect to success page
+                          const orderId = result.data.orderId || paymentDetails.invoice_id;
+                          window.location.href = `/guest/success?orderId=${orderId}`;
+                        } else {
+                          alert(t("paymentNotCompleted") || "Payment not yet completed. Please complete the payment.");
+                        }
+                      } catch (error) {
+                        console.error("Check payment error:", error);
+                        alert(t("checkPaymentError") || "Failed to check payment status");
+                      }
+                    }}
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        {t("processing")}
-                      </span>
-                    ) : (
-                      t("payWithQPay")
-                    )}
+                    {t("checkPaymentStatus")}
                   </Button>
                 </div>
-              </form>
+              )}
+
+              {/* Payment Instructions */}
+              {paymentDetails && (
+                <div className="mt-8 space-y-6">
+                  <div className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
+                      {t("paymentInvoiceReady")}
+                    </span>
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {t("scanQrCodeToPay")}
+                    </h3>
+                    <p className="text-slate-600">{t("scanQrCodeDesc")}</p>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col items-center gap-4 w-full max-w-md">
+                      <div className="w-full max-w-xs aspect-square rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                        {qrImageSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={qrImageSrc}
+                            alt={t("qrCode")}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-sm text-slate-500">
+                            {t("qrCode")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-500 text-center">
+                        {t("qrCodeExpires")}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Bank Apps Section - Full Width Below QR */}
+                  {paymentDetails.urls && paymentDetails.urls.length > 0 && (
+                    <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-200 p-6 space-y-5">
+                      <div className="text-center">
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">
+                          {t("bankAppPaymentsTitle")}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {t("bankAppPaymentsDesc")}
+                        </p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {paymentDetails.urls.map((app) => (
+                          <a
+                            key={`${app.name}-${app.link}`}
+                            href={app.link}
+                            className="group bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-200 flex items-center gap-3"
+                          >
+                            {app.logo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={app.logo}
+                                alt={app.name}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 group-hover:border-blue-400 transition-colors"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-100 to-cyan-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
+                                {app.name.charAt(0)}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                                {app.name}
+                              </p>
+                              {app.description && (
+                                <p className="text-xs text-slate-500 truncate">
+                                  {app.description}
+                                </p>
+                              )}
+                            </div>
+                            <svg
+                              className="w-5 h-5 text-slate-400 shrink-0 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 7l5 5m0 0l-5 5m5-5H6"
+                              />
+                            </svg>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -599,4 +878,3 @@ export default function GuestCheckout() {
     </div>
   );
 }
-

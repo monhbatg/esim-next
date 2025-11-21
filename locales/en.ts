@@ -56,6 +56,8 @@ export default {
   marketplaceTitle: "eSIM Marketplace",
   marketplaceSubtitle:
     "Choose from our wide selection of eSIM plans for destinations worldwide",
+  countries: "Countries",
+  bundles: "Bundles",
   all: "All",
   northAmerica: "North America",
   europe: "Europe",
@@ -132,6 +134,25 @@ export default {
   privacyPolicy: "Privacy Policy",
   payWithQPay: "Pay with QPay",
   processing: "Processing...",
+  paymentInvoiceReady: "Invoice ready",
+  scanQrCodeToPay: "Scan & pay with your banking app",
+  scanQrCodeDesc:
+    "Use the QR code or open the QPay link below to complete your purchase.",
+  openInBankApp: "Open in banking app",
+  qrCodeExpires: "QR code expires in 15 minutes",
+  invoiceId: "Invoice ID",
+  shortLink: "Short link",
+  qrPayload: "QR payload",
+  copy: "Copy",
+  copied: "Copied!",
+  mobilePaymentHint:
+    "On mobile? Tap the button above to launch the payment in your bank app.",
+  bankAppPaymentsTitle: "Pay with your bank app",
+  bankAppPaymentsDesc:
+    "Tap any supported wallet below to launch the payment instantly.",
+  missingPackageCode: "Selected plan is unavailable. Please choose another plan.",
+  paymentDetailsMissing:
+    "We couldn't retrieve the payment details. Please try again.",
 
   // Check Payment
   checkPaymentStatus: "Check Payment Status",
@@ -142,6 +163,8 @@ export default {
   phoneOrEmailRequired: "Please enter your phone number or email",
   checkStatus: "Check Status",
   checking: "Checking...",
+  paymentNotCompleted: "Payment not yet completed. Please complete the payment.",
+  checkPaymentError: "Failed to check payment status. Please try again.",
   paymentStatus: "Payment",
   orderId: "Order ID",
   esimActivationDetails: "Your eSIM Activation Details",
