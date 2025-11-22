@@ -8,7 +8,8 @@ import { useTranslations } from "@/contexts/LocaleContext";
 import { EsimPackage, EsimPlan, PlanWithPackage } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useRef, useCallback } from "react";
+import { useInvoiceStatus } from "@/lib/hooks/useInvoiceStatus";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -32,6 +33,42 @@ type PaymentDetails = {
   urls?: PaymentAppLink[];
   customerId?: string;
   internalInvoiceId?: string;
+};
+
+type EsimDetails = {
+  esimTranNo: string;
+  orderNo: string;
+  transactionId: string;
+  imsi: string | null;
+  iccid: string | null;
+  smsStatus: number | null;
+  msisdn: string | null;
+  ac: string | null;
+  qrCodeUrl: string | null;
+  shortUrl: string | null;
+  smdpStatus: string | null;
+  eid: string;
+  activeType: number | null;
+  dataType: number | null;
+  activateTime: string | null;
+  expiredTime: string | null;
+  totalVolume: number;
+  totalDuration: number;
+  durationUnit: string;
+  orderUsage: number | null;
+  esimStatus: string;
+  pin: string;
+  puk: string;
+  apn: string | null;
+  packageList: Array<{
+    packageName: string;
+    packageCode: string;
+    slug: string;
+    duration: number;
+    volume: number;
+    locationCode: string;
+    createTime: string;
+  }>;
 };
 
 const isPlanWithPackage = (value: unknown): value is PlanWithPackage => {
@@ -94,6 +131,13 @@ export default function GuestCheckout() {
   const [isPlanResolved, setIsPlanResolved] = useState<boolean>(
     Boolean(selectedPlan)
   );
+  const [esimDetails, setEsimDetails] = useState<EsimDetails | null>(null);
+  const [loadingEsimDetails, setLoadingEsimDetails] = useState(false);
+  const [esimDetailsError, setEsimDetailsError] = useState("");
+  // Note: Automatic polling is disabled - only manual checks and callback URLs are used
+  // Cron jobs for constant transaction checking are prohibited
+  const hasRedirectedRef = useRef(false);
+  const hasFetchedEsimRef = useRef(false);
 
   useEffect(() => {
     if (selectedPlan) {
@@ -125,6 +169,101 @@ export default function GuestCheckout() {
 
   const plan = resolvedPlan;
 
+  // Fetch eSIM details when payment is paid
+  const fetchEsimDetails = useCallback(async (orderNo: string) => {
+    if (hasFetchedEsimRef.current) return;
+
+    setLoadingEsimDetails(true);
+    setEsimDetailsError("");
+    hasFetchedEsimRef.current = true;
+
+    try {
+      const response = await fetch("/api/guest/esim/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNo: orderNo,
+          pager: {
+            pageNum: 1,
+            pageSize: 20,
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.errorMsg || result.error || "Failed to fetch eSIM details"
+        );
+      }
+
+      if (result.success && result.obj?.esimList?.length > 0) {
+        setEsimDetails(result.obj.esimList[0] as EsimDetails);
+      } else {
+        setEsimDetailsError("No eSIM details found for this order");
+      }
+    } catch (err) {
+      console.error("Failed to fetch eSIM details:", err);
+      setEsimDetailsError(
+        err instanceof Error ? err.message : "Failed to fetch eSIM details"
+      );
+    } finally {
+      setLoadingEsimDetails(false);
+    }
+  }, []);
+
+  // Use invoice status hook (polling disabled - only manual checks allowed)
+  // Automatic polling/cron jobs are prohibited - use callback URLs instead
+  const {
+    loading: isCheckingPayment,
+    error: paymentCheckError,
+    checkStatus: manualCheckStatus,
+    status: paymentStatus,
+  } = useInvoiceStatus(paymentDetails?.invoice_id || null, {
+    enabled: false, // Disabled - no automatic polling allowed
+    onSuccess: (result) => {
+      if (!hasRedirectedRef.current && result.data?.orderId) {
+        hasRedirectedRef.current = true;
+        const orderNo =
+          result.data.orderNo ||
+          result.data.orderId ||
+          paymentDetails?.invoice_id;
+        // Fetch eSIM details when payment is confirmed
+        if (result.data?.status === "PAID" && orderNo) {
+          fetchEsimDetails(orderNo);
+        }
+        // window.location.href = `/guest/success?orderId=${orderId}`;
+      }
+    },
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
+
+  // Fetch eSIM details when payment status becomes PAID
+  useEffect(() => {
+    if (
+      paymentStatus?.data?.status === "PAID" &&
+      paymentStatus.data.orderNo &&
+      !hasFetchedEsimRef.current
+    ) {
+      fetchEsimDetails(paymentStatus.data.orderNo);
+    }
+  }, [
+    paymentStatus?.data?.status,
+    paymentStatus?.data?.orderNo,
+    fetchEsimDetails,
+  ]);
+
+  // Display payment check errors from the hook
+  useEffect(() => {
+    if (paymentCheckError && !error) {
+      setError(paymentCheckError);
+    }
+  }, [paymentCheckError, error]);
 
   if (!plan && !isPlanResolved) {
     return null;
@@ -220,7 +359,8 @@ export default function GuestCheckout() {
       const payload = {
         phoneNumber: trimmedPhone,
         email: trimmedEmail,
-        amount: amountToCharge,
+        amount: 1,
+        // amount: amountToCharge,
         packageCode,
         description: planDescription || "eSIM Purchase",
       };
@@ -338,7 +478,7 @@ export default function GuestCheckout() {
                 {Math.round(progressPercentage)}% {t("complete")}
               </span>
             </div>
-              <div className="w-full bg-slate-200 rounded-full h-2.5">
+            <div className="w-full bg-slate-200 rounded-full h-2.5">
               <div
                 className="bg-linear-to-r from-blue-500 to-cyan-600 h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
@@ -661,7 +801,7 @@ export default function GuestCheckout() {
                 <p className="text-slate-600">{t("confirmAndPayDesc")}</p>
               </div>
 
-{!paymentDetails ? (
+              {!paymentDetails ? (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Terms */}
                   <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -741,38 +881,532 @@ export default function GuestCheckout() {
                   </div>
                 </form>
               ) : (
-                <div className="flex justify-center">
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="w-full max-w-md"
-                    onClick={async () => {
-                      if (!paymentDetails?.invoice_id) return;
-                      
-                      try {
-                        const response = await fetch("/api/guest/check-payment", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ identifier: paymentDetails.invoice_id }),
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success && result.data?.status === "PAID") {
-                          // Payment successful, redirect to success page
-                          const orderId = result.data.orderId || paymentDetails.invoice_id;
-                          window.location.href = `/guest/success?orderId=${orderId}`;
-                        } else {
-                          alert(t("paymentNotCompleted") || "Payment not yet completed. Please complete the payment.");
-                        }
-                      } catch (error) {
-                        console.error("Check payment error:", error);
-                        alert(t("checkPaymentError") || "Failed to check payment status");
+                <div className="space-y-4">
+                  {/* Callback URL Notice */}
+                  <Card className="border-blue-200 bg-blue-50">
+                    <div className="flex items-start gap-3">
+                      <svg
+                        className="w-5 h-5 text-blue-600 shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-blue-900 font-semibold text-sm mb-1">
+                          {t("paymentStatusUpdate") ||
+                            "Төлбөрийн статус шинэчлэгдэх тухай"}
+                        </p>
+                        <p className="text-blue-700 text-xs">
+                          {t("callbackUrlNotice") ||
+                            "Төлбөр амжилттай болсны дараа танд автоматаар мэдэгдэх болно. Та мөн доорх товчийг дарж гараар шалгаж болно."}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Payment Status Display */}
+                  {paymentStatus?.data?.status && (
+                    <Card
+                      className={
+                        paymentStatus.data.status === "PAID"
+                          ? "border-green-200 bg-green-50"
+                          : paymentStatus.data.status === "FAILED"
+                          ? "border-red-200 bg-red-50"
+                          : paymentStatus.data.status === "PARTIAL"
+                          ? "border-yellow-200 bg-yellow-50"
+                          : paymentStatus.data.status === "REFUNDED"
+                          ? "border-orange-200 bg-orange-50"
+                          : paymentStatus.data.status === "NEW"
+                          ? "border-blue-200 bg-blue-50"
+                          : "border-slate-200 bg-slate-50"
                       }
-                    }}
-                  >
-                    {t("checkPaymentStatus")}
-                  </Button>
+                    >
+                      <div className="flex items-start gap-3">
+                        {paymentStatus.data.status === "PAID" && (
+                          <svg
+                            className="w-6 h-6 text-green-600 shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        )}
+                        {paymentStatus.data.status === "FAILED" && (
+                          <svg
+                            className="w-6 h-6 text-red-600 shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        )}
+                        {(paymentStatus.data.status === "PARTIAL" ||
+                          paymentStatus.data.status === "REFUNDED" ||
+                          paymentStatus.data.status === "NEW" ||
+                          paymentStatus.data.status === "PENDING") && (
+                          <svg
+                            className="w-6 h-6 text-blue-600 shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm mb-1">
+                            {t("transactionStatus") || "Transaction Status"}
+                          </p>
+                          <p
+                            className={
+                              paymentStatus.data.status === "PAID"
+                                ? "text-green-900 font-bold text-lg"
+                                : paymentStatus.data.status === "FAILED"
+                                ? "text-red-900 font-bold text-lg"
+                                : paymentStatus.data.status === "PARTIAL"
+                                ? "text-yellow-900 font-bold text-lg"
+                                : paymentStatus.data.status === "REFUNDED"
+                                ? "text-orange-900 font-bold text-lg"
+                                : "text-slate-900 font-bold text-lg"
+                            }
+                          >
+                            {paymentStatus.data.status === "PAID" &&
+                              (t("transactionStatusPaid") || "Төлөгдсөн")}
+                            {paymentStatus.data.status === "FAILED" &&
+                              (t("transactionStatusFailed") ||
+                                "Гүйлгээ амжилтгүй")}
+                            {paymentStatus.data.status === "PARTIAL" &&
+                              (t("transactionStatusPartial") ||
+                                "Дутуу төлөгдсөн")}
+                            {paymentStatus.data.status === "REFUNDED" &&
+                              (t("transactionStatusRefunded") ||
+                                "Гүйлгээ буцаагдсан")}
+                            {paymentStatus.data.status === "NEW" &&
+                              (t("transactionStatusNew") ||
+                                "Гүйлгээ үүсгэгдсэн")}
+                            {paymentStatus.data.status === "PENDING" &&
+                              (t("transactionStatusPending") ||
+                                "Хүлээгдэж байна")}
+                          </p>
+                          {paymentStatus.data.paid_amount !== undefined &&
+                            paymentStatus.data.paid_amount > 0 && (
+                              <p className="text-xs mt-1 opacity-75">
+                                {t("paidAmount") || "Төлсөн дүн"}:{" "}
+                                {new Intl.NumberFormat("mn-MN", {
+                                  style: "currency",
+                                  currency: "MNT",
+                                  minimumFractionDigits: 0,
+                                }).format(paymentStatus.data.paid_amount)}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Manual Check Button */}
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="w-full max-w-md"
+                      disabled={isCheckingPayment || isSubmitting}
+                      onClick={async () => {
+                        if (!paymentDetails?.invoice_id) return;
+
+                        setIsSubmitting(true);
+                        setError("");
+
+                        try {
+                          // The checkStatus function updates paymentStatus state
+                          // We'll rely on the useEffect to fetch eSIM details when status becomes PAID
+                          await manualCheckStatus();
+                        } catch (error) {
+                          console.error("Check payment error:", error);
+                          setError(
+                            t("checkPaymentError") ||
+                              "Failed to check payment status. Please try again."
+                          );
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                    >
+                      {isCheckingPayment || isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg
+                            className="animate-spin h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          {t("checkingPayment") || "Checking..."}
+                        </span>
+                      ) : (
+                        t("checkPaymentStatus")
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* eSIM Details Display - Show when payment is PAID */}
+                  {paymentStatus?.data?.status === "PAID" && (
+                    <div className="mt-8 space-y-6">
+                      {loadingEsimDetails && (
+                        <Card className="border-blue-200 bg-blue-50">
+                          <div className="flex items-center justify-center gap-3 py-8">
+                            <svg
+                              className="animate-spin h-6 w-6 text-blue-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span className="text-blue-900 font-medium">
+                              {t("loadingEsimDetails") ||
+                                "Loading eSIM details..."}
+                            </span>
+                          </div>
+                        </Card>
+                      )}
+
+                      {esimDetailsError && (
+                        <Card className="border-red-200 bg-red-50">
+                          <div className="flex items-start gap-3">
+                            <svg
+                              className="w-5 h-5 text-red-600 shrink-0 mt-0.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <div className="flex-1">
+                              <p className="text-red-900 font-semibold mb-1">
+                                Error
+                              </p>
+                              <p className="text-red-800 text-sm">
+                                {esimDetailsError}
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
+
+                      {esimDetails && !loadingEsimDetails && (
+                        <div className="space-y-6">
+                          {/* Header */}
+                          <div className="text-center">
+                            <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                              {t("esimDetails") || "eSIM Details"}
+                            </h3>
+                            <p className="text-slate-600">
+                              {t("esimDetailsDesc") ||
+                                "Your eSIM purchase is complete! Here are your activation details:"}
+                            </p>
+                          </div>
+
+                          {/* QR Code Section */}
+                          {esimDetails.qrCodeUrl && (
+                            <Card className="border-2 border-blue-200 bg-linear-to-br from-blue-50 to-cyan-50">
+                              <div className="text-center mb-4">
+                                <h4 className="text-lg font-bold text-slate-900 mb-2">
+                                  {t("qrCode") || "QR Code"}
+                                </h4>
+                                <p className="text-sm text-slate-600">
+                                  {t("scanQrCodeDesc") ||
+                                    "Scan this QR code with your device to activate your eSIM"}
+                                </p>
+                              </div>
+                              <div className="flex justify-center mb-4">
+                                <div className="bg-white rounded-xl border-2 border-slate-200 p-4 w-full max-w-xs">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={esimDetails.qrCodeUrl}
+                                    alt={t("qrCode") || "QR Code"}
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const link = document.createElement("a");
+                                    link.href = esimDetails.qrCodeUrl || "";
+                                    link.download = "esim-qr-code.png";
+                                    link.click();
+                                  }}
+                                >
+                                  {t("downloadQrCode") || "Download QR Code"}
+                                </Button>
+                                <Link href="/guide">
+                                  <Button variant="outline" size="sm">
+                                    {t("viewInstallationGuide") ||
+                                      "View Installation Guide"}
+                                  </Button>
+                                </Link>
+                              </div>
+                            </Card>
+                          )}
+
+                          {/* Activation Details */}
+                          <Card>
+                            <h4 className="text-lg font-bold text-slate-900 mb-4">
+                              {t("esimActivationDetails") ||
+                                "Activation Details"}
+                            </h4>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {/* Order Number */}
+                              {esimDetails.orderNo && (
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                    {t("orderNumber") || "Order Number"}
+                                  </label>
+                                  <p className="text-slate-900 font-mono text-sm break-all">
+                                    {esimDetails.orderNo}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Transaction Number */}
+                              {esimDetails.esimTranNo && (
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                    {t("transactionNumber") ||
+                                      "Transaction Number"}
+                                  </label>
+                                  <p className="text-slate-900 font-mono text-sm break-all">
+                                    {esimDetails.esimTranNo}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* ICCID */}
+                              {esimDetails.iccid && (
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                    {t("iccid") || "ICCID"}
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-slate-900 font-mono text-sm break-all flex-1">
+                                      {esimDetails.iccid}
+                                    </p>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(
+                                          esimDetails.iccid || ""
+                                        );
+                                        // You could add a toast notification here
+                                      }}
+                                    >
+                                      {t("copyIccid") || "Copy"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Activation Code */}
+                              {esimDetails.ac && (
+                                <div>
+                                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                    {t("activationCode") || "Activation Code"}
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-slate-900 font-mono text-sm break-all flex-1">
+                                      {esimDetails.ac}
+                                    </p>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(
+                                          esimDetails.ac || ""
+                                        );
+                                        // You could add a toast notification here
+                                      }}
+                                    >
+                                      {t("copyActivationCode") || "Copy"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Status */}
+                              <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                  {t("esimStatus") || "Status"}
+                                </label>
+                                <p className="text-slate-900 font-semibold">
+                                  {esimDetails.esimStatus === "GOT_RESOURCE" &&
+                                    (t("esimStatusGotResource") ||
+                                      "Ready to Activate")}
+                                  {esimDetails.esimStatus === "IN_USE" &&
+                                    (t("esimStatusInUse") || "Active")}
+                                  {esimDetails.esimStatus === "USED_UP" &&
+                                    (t("esimStatusUsedUp") || "Data Depleted")}
+                                  {esimDetails.esimStatus === "CANCEL" &&
+                                    (t("esimStatusCancel") || "Cancelled")}
+                                  {![
+                                    "GOT_RESOURCE",
+                                    "IN_USE",
+                                    "USED_UP",
+                                    "CANCEL",
+                                  ].includes(esimDetails.esimStatus) &&
+                                    esimDetails.esimStatus}
+                                </p>
+                              </div>
+
+                              {/* Total Data */}
+                              <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                  {t("totalData") || "Total Data"}
+                                </label>
+                                <p className="text-slate-900 font-semibold">
+                                  {esimDetails.totalVolume
+                                    ? `${(
+                                        esimDetails.totalVolume /
+                                        (1024 * 1024 * 1024)
+                                      ).toFixed(2)} GB`
+                                    : "N/A"}
+                                </p>
+                              </div>
+
+                              {/* Duration */}
+                              <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                  {t("duration") || "Duration"}
+                                </label>
+                                <p className="text-slate-900 font-semibold">
+                                  {esimDetails.totalDuration}{" "}
+                                  {esimDetails.durationUnit || "days"}
+                                </p>
+                              </div>
+
+                              {/* Activation Time */}
+                              <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                  {t("activationTime") || "Activation Time"}
+                                </label>
+                                <p className="text-slate-900">
+                                  {esimDetails.activateTime
+                                    ? new Date(
+                                        esimDetails.activateTime
+                                      ).toLocaleString()
+                                    : t("notActivated") || "Not Activated"}
+                                </p>
+                              </div>
+
+                              {/* Expiration Time */}
+                              <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                  {t("expirationTime") || "Expiration Time"}
+                                </label>
+                                <p className="text-slate-900">
+                                  {esimDetails.expiredTime
+                                    ? new Date(
+                                        esimDetails.expiredTime
+                                      ).toLocaleString()
+                                    : t("notSet") || "Not Set"}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+
+                          {/* Manual Activation Instructions */}
+                          {esimDetails.ac && (
+                            <Card className="border-blue-200 bg-blue-50">
+                              <h4 className="text-lg font-bold text-slate-900 mb-2">
+                                {t("manualActivation") || "Manual Activation"}
+                              </h4>
+                              <p className="text-sm text-slate-700 mb-4">
+                                {t("manualActivationDesc") ||
+                                  "If you can't scan the QR code, use these details:"}
+                              </p>
+                              <div className="space-y-2 text-sm">
+                                {esimDetails.ac && (
+                                  <div className="bg-white rounded-lg p-3 border border-slate-200">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                      {t("activationCode") || "Activation Code"}
+                                    </label>
+                                    <p className="text-slate-900 font-mono break-all">
+                                      {esimDetails.ac}
+                                    </p>
+                                  </div>
+                                )}
+                                {esimDetails.apn && (
+                                  <div className="bg-white rounded-lg p-3 border border-slate-200">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                                      {t("apn") || "APN"}
+                                    </label>
+                                    <p className="text-slate-900 font-mono break-all">
+                                      {esimDetails.apn}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

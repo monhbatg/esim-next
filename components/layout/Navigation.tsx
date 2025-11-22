@@ -9,6 +9,7 @@ const getNavigationItems = () => [
   { name: 'home', href: `/`, protected: false },
   { name: 'marketplace', href: `/marketplace`, protected: false },
   { name: 'topUp', href: `/guest/topup`, protected: false },
+  { name: 'guide', href: `/guide`, protected: false },
   { name: 'about', href: `/about`, protected: false },
   { name: 'profile', href: `/profile`, protected: true },
 ];

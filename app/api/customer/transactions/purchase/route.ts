@@ -92,9 +92,7 @@ export async function POST(request: NextRequest) {
     const normalizedUrls: QPayAppLink[] = rawUrls
       .filter(
         (item: any): item is QPayAppLink =>
-          item &&
-          typeof item.link === "string" &&
-          item.link.trim().length > 0
+          item && typeof item.link === "string" && item.link.trim().length > 0
       )
       .map((item) => ({
         name: item.name,
@@ -119,8 +117,7 @@ export async function POST(request: NextRequest) {
         qPay_shortUrl: purchaseData.qPay_shortUrl,
         customerId: purchaseData.customerId,
         internalInvoiceId:
-          purchaseData.internalInvoiceId ||
-          purchaseData.internal_invoice_id,
+          purchaseData.internalInvoiceId || purchaseData.internal_invoice_id,
         urls: normalizedUrls.length ? normalizedUrls : undefined,
       },
     });
@@ -138,5 +135,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
