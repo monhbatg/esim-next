@@ -5,7 +5,7 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import { useTranslations } from "@/contexts/LocaleContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, Suspense } from "react";
 
 type PaymentStatus = "PENDING" | "PAID" | "EXPIRED" | null;
 
@@ -18,7 +18,7 @@ interface PaymentInfo {
   activationCode?: string;
 }
 
-export default function CheckPayment() {
+function CheckPaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
@@ -376,6 +376,25 @@ export default function CheckPayment() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckPayment() {
+  return (
+    <Suspense fallback={
+      <div className="py-12 md:py-20 bg-gradient-to-b from-white via-slate-50 to-white min-h-screen">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-slate-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <CheckPaymentContent />
+    </Suspense>
   );
 }
 
