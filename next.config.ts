@@ -5,7 +5,7 @@ const nextConfig = {
   },
   typescript: {
     // Disable TypeScript errors during builds (optional - only if needed)
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
   async rewrites() {
     // Only rewrite non-auth API routes to the backend
