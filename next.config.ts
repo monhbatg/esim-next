@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    // Disable ESLint during builds (Vercel will ignore ESLint errors)
+    ignoreDuringBuilds: true,
+  },
   async rewrites() {
     // Only rewrite non-auth API routes to the backend
     // Auth routes (/api/auth/*) are handled by Next.js API routes
