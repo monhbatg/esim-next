@@ -4,7 +4,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { useTranslations } from "@/contexts/LocaleContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 interface OrderData {
   orderId: string;
@@ -22,7 +22,7 @@ interface OrderData {
   };
 }
 
-export default function GuestSuccess() {
+function GuestSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
@@ -308,6 +308,21 @@ export default function GuestSuccess() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GuestSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="py-20 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <GuestSuccessContent />
+    </Suspense>
   );
 }
 
