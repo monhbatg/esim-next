@@ -90,11 +90,19 @@ export async function POST(request: NextRequest) {
     const purchaseData = backendData?.data ?? backendData ?? {};
     const rawUrls = Array.isArray(purchaseData?.urls) ? purchaseData.urls : [];
     const normalizedUrls: QPayAppLink[] = rawUrls
-      .filter(
-        (item): item is QPayAppLink =>
-          item && typeof item.link === "string" && item.link.trim().length > 0
-      )
-      .map((item) => ({
+      .filter((item: unknown): item is QPayAppLink => {
+        if (
+          !item ||
+          typeof item !== "object" ||
+          !("link" in item) ||
+          typeof (item as { link: unknown }).link !== "string"
+        ) {
+          return false;
+        }
+        const link = (item as { link: string }).link;
+        return link.trim().length > 0;
+      })
+      .map((item: QPayAppLink) => ({
         name: item.name,
         description: item.description,
         logo: item.logo,
