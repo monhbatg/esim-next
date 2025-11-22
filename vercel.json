@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "yarn install",
+  "framework": "nextjs",
+  "env": {
+    "ESLINT_NO_DEV_ERRORS": "true"
+  }
+}
+
