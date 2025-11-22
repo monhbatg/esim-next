@@ -1460,7 +1460,9 @@ export default function GuestCheckout() {
                           <a
                             key={`${app.name}-${app.link}`}
                             href={app.link}
-                            className="group bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-200 flex items-center gap-3"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-200 flex items-center gap-3 cursor-pointer"
                           >
                             {app.logo ? (
                               // eslint-disable-next-line @next/next/no-img-element
