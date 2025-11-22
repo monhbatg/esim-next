@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     const rawUrls = Array.isArray(purchaseData?.urls) ? purchaseData.urls : [];
     const normalizedUrls: QPayAppLink[] = rawUrls
       .filter(
-        (item: any): item is QPayAppLink =>
+        (item): item is QPayAppLink =>
           item && typeof item.link === "string" && item.link.trim().length > 0
       )
       .map((item) => ({

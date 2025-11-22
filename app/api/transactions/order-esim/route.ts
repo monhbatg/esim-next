@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const backendUrl = `${apiUrl}/api/transactions/order-esim`;
 
     // Prepare request body
-    const requestBody: any = {
+    const requestBody = {
       amount,
       packageInfoList,
     };
