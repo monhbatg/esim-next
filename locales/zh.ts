@@ -206,6 +206,7 @@ export default {
   manualActivation: "手动激活",
   manualActivationDesc: "如果您无法扫描二维码，请使用以下详细信息：",
   viewInstallationGuide: "查看安装指南",
+  saveAllInformation: "保存所有信息",
   apn: "APN",
 
   // Guest Success

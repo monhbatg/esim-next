@@ -217,6 +217,7 @@ export default {
   manualActivation: "Гараар идэвхжүүлэх",
   manualActivationDesc: "Хэрэв та QR кодыг уншуулж чадахгүй бол эдгээр мэдээллийг ашиглана уу:",
   viewInstallationGuide: "Суулгах заавар үзэх",
+  saveAllInformation: "Бүх мэдээлэл хадгалах",
   apn: "APN",
 
   // Guest Success

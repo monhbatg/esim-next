@@ -221,6 +221,7 @@ export default {
   manualActivation: "Manual Activation",
   manualActivationDesc: "If you can't scan the QR code, use these details:",
   viewInstallationGuide: "View Installation Guide",
+  saveAllInformation: "Save All Information",
   apn: "APN",
 
   // Guest Success

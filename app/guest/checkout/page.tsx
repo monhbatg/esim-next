@@ -359,8 +359,8 @@ export default function GuestCheckout() {
       const payload = {
         phoneNumber: trimmedPhone,
         email: trimmedEmail,
-        // amount: 1, for test
-        amount: amountToCharge,
+        amount: 1, // for test
+        // amount: amountToCharge,
         packageCode,
         description: planDescription || "eSIM Purchase",
       };
@@ -1029,62 +1029,63 @@ export default function GuestCheckout() {
                   )}
 
                   {/* Manual Check Button */}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      size="lg"
-                      className="w-full max-w-md"
-                      disabled={isCheckingPayment || isSubmitting}
-                      onClick={async () => {
-                        if (!paymentDetails?.invoice_id) return;
+                  {!esimDetails && (
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        size="lg"
+                        className="w-full max-w-md"
+                        disabled={isCheckingPayment || isSubmitting}
+                        onClick={async () => {
+                          if (!paymentDetails?.invoice_id) return;
 
-                        setIsSubmitting(true);
-                        setError("");
+                          setIsSubmitting(true);
+                          setError("");
 
-                        try {
-                          // The checkStatus function updates paymentStatus state
-                          // We'll rely on the useEffect to fetch eSIM details when status becomes PAID
-                          await manualCheckStatus();
-                        } catch (error) {
-                          console.error("Check payment error:", error);
-                          setError(
-                            t("checkPaymentError") ||
-                              "Failed to check payment status. Please try again."
-                          );
-                        } finally {
-                          setIsSubmitting(false);
-                        }
-                      }}
-                    >
-                      {isCheckingPayment || isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          {t("checkingPayment") || "Checking..."}
-                        </span>
-                      ) : (
-                        t("checkPaymentStatus")
-                      )}
-                    </Button>
-                  </div>
-
+                          try {
+                            // The checkStatus function updates paymentStatus state
+                            // We'll rely on the useEffect to fetch eSIM details when status becomes PAID
+                            await manualCheckStatus();
+                          } catch (error) {
+                            console.error("Check payment error:", error);
+                            setError(
+                              t("checkPaymentError") ||
+                                "Failed to check payment status. Please try again."
+                            );
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }}
+                      >
+                        {isCheckingPayment || isSubmitting ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            {t("checkingPayment") || "Checking..."}
+                          </span>
+                        ) : (
+                          t("checkPaymentStatus")
+                        )}
+                      </Button>
+                    </div>
+                  )}
                   {/* eSIM Details Display - Show when payment is PAID */}
                   {paymentStatus?.data?.status === "PAID" && (
                     <div className="mt-8 space-y-6">
@@ -1172,24 +1173,100 @@ export default function GuestCheckout() {
                                 </p>
                               </div>
                               <div className="flex justify-center mb-4">
-                                <div className="bg-white rounded-xl border-2 border-slate-200 p-4 w-full max-w-xs">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={esimDetails.qrCodeUrl}
-                                    alt={t("qrCode") || "QR Code"}
-                                    className="w-full h-full object-contain"
-                                  />
-                                </div>
+                                <a
+                                  href={esimDetails.qrCodeUrl || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block"
+                                >
+                                  <div className="bg-white rounded-xl border-2 border-slate-200 p-4 w-full max-w-md hover:border-blue-400 transition-colors cursor-pointer">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={esimDetails.qrCodeUrl}
+                                      alt={t("qrCode") || "QR Code"}
+                                      className="w-full h-full object-contain"
+                                    />
+                                  </div>
+                                </a>
                               </div>
                               <div className="flex justify-center gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = esimDetails.qrCodeUrl || "";
-                                    link.download = "esim-qr-code.png";
-                                    link.click();
+                                  onClick={async () => {
+                                    if (!esimDetails.qrCodeUrl) return;
+
+                                    try {
+                                      // Try to fetch and download as blob first
+                                      const response = await fetch(
+                                        esimDetails.qrCodeUrl,
+                                        {
+                                          mode: "cors",
+                                          cache: "no-cache",
+                                        }
+                                      );
+
+                                      if (!response.ok) {
+                                        throw new Error(
+                                          `HTTP error! status: ${response.status}`
+                                        );
+                                      }
+
+                                      const blob = await response.blob();
+                                      const blobUrl =
+                                        window.URL.createObjectURL(blob);
+
+                                      const link = document.createElement("a");
+                                      link.href = blobUrl;
+                                      link.download = `esim-qr-code-${
+                                        esimDetails.orderNo || "unknown"
+                                      }-${esimDetails.esimTranNo || "unknown"}-${
+                                        new Date().toISOString().split("T")[0]
+                                      }.png`;
+                                      link.style.display = "none";
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      
+                                      // Clean up after a short delay
+                                      setTimeout(() => {
+                                        document.body.removeChild(link);
+                                        window.URL.revokeObjectURL(blobUrl);
+                                      }, 100);
+                                    } catch (error) {
+                                      console.error(
+                                        "Failed to download QR code:",
+                                        error
+                                      );
+                                      
+                                      // Fallback: try direct download
+                                      try {
+                                        const link = document.createElement("a");
+                                        link.href = esimDetails.qrCodeUrl;
+                                        link.download = `esim-qr-code-${
+                                          esimDetails.orderNo || "unknown"
+                                        }-${esimDetails.esimTranNo || "unknown"}-${
+                                          new Date().toISOString().split("T")[0]
+                                        }.png`;
+                                        link.target = "_blank";
+                                        link.rel = "noopener noreferrer";
+                                        link.style.display = "none";
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        setTimeout(() => {
+                                          document.body.removeChild(link);
+                                        }, 100);
+                                      } catch (fallbackError) {
+                                        console.error(
+                                          "Fallback download also failed:",
+                                          fallbackError
+                                        );
+                                        // Last resort: open in new tab
+                                        window.open(
+                                          esimDetails.qrCodeUrl,
+                                          "_blank"
+                                        );
+                                      }
+                                    }
                                   }}
                                 >
                                   {t("downloadQrCode") || "Download QR Code"}
@@ -1206,14 +1283,387 @@ export default function GuestCheckout() {
 
                           {/* Activation Details */}
                           <Card>
-                            <h4 className="text-lg font-bold text-slate-900 mb-4">
-                              {t("esimActivationDetails") ||
-                                "Activation Details"}
-                            </h4>
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-lg font-bold text-slate-900">
+                                {t("esimActivationDetails") ||
+                                  "Activation Details"}
+                              </h4>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    // Get Mongolian translations
+                                    const translations = {
+                                      title:
+                                        t("esimActivationDetails") ||
+                                        "eSIM идэвхжүүлэх мэдээлэл",
+                                      orderInfo: "Захиалгын мэдээлэл",
+                                      orderNumber:
+                                        t("orderNumber") || "Захиалгын дугаар",
+                                      transactionNumber:
+                                        t("transactionNumber") ||
+                                        "Гүйлгээний дугаар",
+                                      transactionId: "Гүйлгээний ID",
+                                      activationInfo: "Идэвхжүүлэх мэдээлэл",
+                                      iccid: t("iccid") || "ICCID",
+                                      activationCode:
+                                        t("activationCode") ||
+                                        "Идэвхжүүлэх код",
+                                      imsi: "IMSI",
+                                      msisdn: "MSISDN",
+                                      eid: "EID",
+                                      statusUsage: "Статус ба ашиглалт",
+                                      status: t("esimStatus") || "Статус",
+                                      totalData:
+                                        t("totalData") || "Нийт өгөгдөл",
+                                      duration: t("duration") || "Хугацаа",
+                                      activationTime:
+                                        t("activationTime") ||
+                                        "Идэвхжүүлсэн цаг",
+                                      expiryTime:
+                                        t("expirationTime") ||
+                                        "Хугацаа дуусах цаг",
+                                      networkSettings: "Сүлжээний тохиргоо",
+                                      apn: t("apn") || "APN",
+                                      pin: "PIN",
+                                      puk: "PUK",
+                                      qrCode: t("qrCode") || "QR код",
+                                      qrCodeDesc:
+                                        t("scanQrCodeDesc") ||
+                                        "Энэ QR кодыг төхөөрөмжөөрөө уншуулж eSIM-ээ идэвхжүүлнэ үү",
+                                      additionalInfo: "Нэмэлт мэдээлэл",
+                                      qrCodeUrl: "QR кодын URL",
+                                      shortUrl: "Богино URL",
+                                      smsStatus: "SMS статус",
+                                      smdpStatus: "SMDP статус",
+                                      activeType: "Идэвхтэй төрөл",
+                                      dataType: "Өгөгдлийн төрөл",
+                                      important: "ЧУХАЛ:",
+                                      warning:
+                                        "Энэ мэдээллийг аюулгүй хадгална уу! Идэвхжүүлэх код эсвэл PIN/PUK-ээ хэнд ч бүү хуваалцаарай.",
+                                      generated: "Үүсгэсэн:",
+                                      notActivated:
+                                        t("notActivated") || "Идэвхжүүлээгүй",
+                                      na: "Байхгүй",
+                                    };
+
+                                    // Fetch QR code image and convert to base64
+                                    let qrCodeBase64 = "";
+                                    if (esimDetails.qrCodeUrl) {
+                                      try {
+                                        const qrResponse = await fetch(
+                                          esimDetails.qrCodeUrl
+                                        );
+                                        const qrBlob = await qrResponse.blob();
+                                        const qrBase64 =
+                                          await new Promise<string>(
+                                            (resolve, reject) => {
+                                              const reader = new FileReader();
+                                              reader.onloadend = () => {
+                                                const base64String =
+                                                  reader.result as string;
+                                                resolve(base64String);
+                                              };
+                                              reader.onerror = reject;
+                                              reader.readAsDataURL(qrBlob);
+                                            }
+                                          );
+                                        qrCodeBase64 = qrBase64;
+                                      } catch (error) {
+                                        console.error(
+                                          "Failed to fetch QR code:",
+                                          error
+                                        );
+                                      }
+                                    }
+
+                                    // Get status translation
+                                    const getStatusText = (status: string) => {
+                                      switch (status) {
+                                        case "GOT_RESOURCE":
+                                          return (
+                                            t("esimStatusGotResource") ||
+                                            "Идэвхжүүлэхэд бэлэн"
+                                          );
+                                        case "IN_USE":
+                                          return (
+                                            t("esimStatusInUse") || "Идэвхтэй"
+                                          );
+                                        case "USED_UP":
+                                          return (
+                                            t("esimStatusUsedUp") ||
+                                            "Өгөгдөл дууссан"
+                                          );
+                                        case "CANCEL":
+                                          return (
+                                            t("esimStatusCancel") ||
+                                            "Цуцлагдсан"
+                                          );
+                                        default:
+                                          return status;
+                                      }
+                                    };
+
+                                    // Create HTML content with embedded QR code
+                                    const htmlContent = `<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${translations.title} - ${
+                                      esimDetails.orderNo || translations.na
+                                    }</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+      color: #1e293b;
+      background-color: #f8fafc;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #0f172a;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+    h2 {
+      color: #334155;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+      border-left: 4px solid #3b82f6;
+      padding-left: 10px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 10px 20px;
+      margin-bottom: 15px;
+    }
+    .label {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 0.9em;
+    }
+    .value {
+      font-family: 'Courier New', monospace;
+      color: #0f172a;
+      word-break: break-all;
+    }
+    .qr-code {
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .qr-code img {
+      max-width: 500px;
+      width: 100%;
+      height: auto;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      background: white;
+    }
+    .warning {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin-top: 30px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9em;
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      .container {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${translations.title}</h1>
+    
+    <h2>${translations.orderInfo}</h2>
+    <div class="info-grid">
+      <div class="label">${translations.orderNumber}:</div>
+      <div class="value">${esimDetails.orderNo || translations.na}</div>
+      <div class="label">${translations.transactionNumber}:</div>
+      <div class="value">${esimDetails.esimTranNo || translations.na}</div>
+      <div class="label">${translations.transactionId}:</div>
+      <div class="value">${esimDetails.transactionId || translations.na}</div>
+    </div>
+
+    <h2>${translations.activationInfo}</h2>
+    <div class="info-grid">
+      <div class="label">${translations.iccid}:</div>
+      <div class="value">${esimDetails.iccid || translations.na}</div>
+      <div class="label">${translations.activationCode} (AC):</div>
+      <div class="value">${esimDetails.ac || translations.na}</div>
+      <div class="label">${translations.imsi}:</div>
+      <div class="value">${esimDetails.imsi || translations.na}</div>
+      <div class="label">${translations.msisdn}:</div>
+      <div class="value">${esimDetails.msisdn || translations.na}</div>
+      <div class="label">${translations.eid}:</div>
+      <div class="value">${esimDetails.eid || translations.na}</div>
+    </div>
+
+    <h2>${translations.statusUsage}</h2>
+    <div class="info-grid">
+      <div class="label">${translations.status}:</div>
+      <div class="value">${
+        getStatusText(esimDetails.esimStatus) || translations.na
+      }</div>
+      <div class="label">${translations.totalData}:</div>
+      <div class="value">${
+        esimDetails.totalVolume
+          ? `${(esimDetails.totalVolume / (1024 * 1024 * 1024)).toFixed(2)} GB`
+          : translations.na
+      }</div>
+      <div class="label">${translations.duration}:</div>
+      <div class="value">${esimDetails.totalDuration} ${
+                                      esimDetails.durationUnit || "өдөр"
+                                    }</div>
+      <div class="label">${translations.activationTime}:</div>
+      <div class="value">${
+        esimDetails.activateTime
+          ? new Date(esimDetails.activateTime).toLocaleString("mn-MN")
+          : translations.notActivated
+      }</div>
+      <div class="label">${translations.expiryTime}:</div>
+      <div class="value">${
+        esimDetails.expiredTime
+          ? new Date(esimDetails.expiredTime).toLocaleString("mn-MN")
+          : translations.na
+      }</div>
+    </div>
+
+    <h2>${translations.networkSettings}</h2>
+    <div class="info-grid">
+      <div class="label">${translations.apn}:</div>
+      <div class="value">${esimDetails.apn || translations.na}</div>
+      <div class="label">${translations.pin}:</div>
+      <div class="value">${esimDetails.pin || translations.na}</div>
+      <div class="label">${translations.puk}:</div>
+      <div class="value">${esimDetails.puk || translations.na}</div>
+    </div>
+
+    ${
+      qrCodeBase64
+        ? `
+    <h2>${translations.qrCode}</h2>
+    <div class="qr-code">
+      <a href="${
+        esimDetails.qrCodeUrl || "#"
+      }" target="_blank" rel="noopener noreferrer" style="display: inline-block;">
+        <img src="${qrCodeBase64}" alt="${
+            translations.qrCode
+          }" style="cursor: pointer;" />
+      </a>
+      <p style="margin-top: 15px; color: #64748b;">
+        ${translations.qrCodeDesc}
+      </p>
+    </div>
+    `
+        : ""
+    }
+
+    <h2>${translations.additionalInfo}</h2>
+    <div class="info-grid">
+      <div class="label">${translations.qrCodeUrl}:</div>
+      <div class="value">${
+        esimDetails.qrCodeUrl
+          ? `<a href="${esimDetails.qrCodeUrl}" target="_blank" rel="noopener noreferrer"><img src="${esimDetails.qrCodeUrl}" alt="${translations.qrCode}" style="max-width: 200px; height: auto; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px; background: white;" /></a>`
+          : translations.na
+      }</div>
+      <div class="label">${translations.shortUrl}:</div>
+      <div class="value">${
+        esimDetails.shortUrl
+          ? `<a href="${esimDetails.shortUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline; word-break: break-all;">${esimDetails.shortUrl}</a>`
+          : translations.na
+      }</div>
+      <div class="label">${translations.smsStatus}:</div>
+      <div class="value">${
+        esimDetails.smsStatus !== null ? esimDetails.smsStatus : translations.na
+      }</div>
+      <div class="label">${translations.smdpStatus}:</div>
+      <div class="value">${esimDetails.smdpStatus || translations.na}</div>
+      <div class="label">${translations.activeType}:</div>
+      <div class="value">${
+        esimDetails.activeType !== null
+          ? esimDetails.activeType
+          : translations.na
+      }</div>
+      <div class="label">${translations.dataType}:</div>
+      <div class="value">${
+        esimDetails.dataType !== null ? esimDetails.dataType : translations.na
+      }</div>
+    </div>
+    <div class="footer">
+      ${translations.generated} ${new Date().toLocaleString("mn-MN")}
+    </div>
+  </div>
+</body>
+</html>`;
+
+                                    const blob = new Blob([htmlContent], {
+                                      type: "text/html",
+                                    });
+                                    const url =
+                                      window.URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.download = `esim-details-${
+                                      esimDetails.orderNo || "unknown"
+                                    }-${
+                                      new Date().toISOString().split("T")[0]
+                                    }.html`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (error) {
+                                    console.error(
+                                      "Failed to save information:",
+                                      error
+                                    );
+                                    alert(
+                                      t("saveError") ||
+                                        "Failed to save information. Please try again."
+                                    );
+                                  }
+                                }}
+                              >
+                                {t("saveAllInformation") ||
+                                  "Save All Information"}
+                              </Button>
+                            </div>
                             <div className="grid gap-4 md:grid-cols-2">
                               {/* Order Number */}
                               {esimDetails.orderNo && (
-                                <div>
+                                <div className="min-w-0">
                                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
                                     {t("orderNumber") || "Order Number"}
                                   </label>
@@ -1225,7 +1675,7 @@ export default function GuestCheckout() {
 
                               {/* Transaction Number */}
                               {esimDetails.esimTranNo && (
-                                <div>
+                                <div className="min-w-0">
                                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
                                     {t("transactionNumber") ||
                                       "Transaction Number"}
@@ -1238,53 +1688,55 @@ export default function GuestCheckout() {
 
                               {/* ICCID */}
                               {esimDetails.iccid && (
-                                <div>
+                                <div className="min-w-0 w-full">
                                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
                                     {t("iccid") || "ICCID"}
                                   </label>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-slate-900 font-mono text-sm break-all flex-1">
+                                  <div className="bg-slate-50 rounded-md p-2 border border-slate-200 mb-2">
+                                    <p className="text-slate-900 font-mono text-sm break-all">
                                       {esimDetails.iccid}
                                     </p>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(
-                                          esimDetails.iccid || ""
-                                        );
-                                        // You could add a toast notification here
-                                      }}
-                                    >
-                                      {t("copyIccid") || "Copy"}
-                                    </Button>
                                   </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(
+                                        esimDetails.iccid || ""
+                                      );
+                                      // You could add a toast notification here
+                                    }}
+                                  >
+                                    {t("copyIccid") || "Copy"}
+                                  </Button>
                                 </div>
                               )}
 
                               {/* Activation Code */}
                               {esimDetails.ac && (
-                                <div>
+                                <div className="min-w-0 w-full">
                                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
                                     {t("activationCode") || "Activation Code"}
                                   </label>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-slate-900 font-mono text-sm break-all flex-1">
+                                  <div className="bg-slate-50 rounded-md p-2 border border-slate-200 mb-2">
+                                    <p className="text-slate-900 font-mono text-sm break-all">
                                       {esimDetails.ac}
                                     </p>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(
-                                          esimDetails.ac || ""
-                                        );
-                                        // You could add a toast notification here
-                                      }}
-                                    >
-                                      {t("copyActivationCode") || "Copy"}
-                                    </Button>
                                   </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(
+                                        esimDetails.ac || ""
+                                      );
+                                      // You could add a toast notification here
+                                    }}
+                                  >
+                                    {t("copyActivationCode") || "Copy"}
+                                  </Button>
                                 </div>
                               )}
 
@@ -1368,41 +1820,6 @@ export default function GuestCheckout() {
                               </div>
                             </div>
                           </Card>
-
-                          {/* Manual Activation Instructions */}
-                          {esimDetails.ac && (
-                            <Card className="border-blue-200 bg-blue-50">
-                              <h4 className="text-lg font-bold text-slate-900 mb-2">
-                                {t("manualActivation") || "Manual Activation"}
-                              </h4>
-                              <p className="text-sm text-slate-700 mb-4">
-                                {t("manualActivationDesc") ||
-                                  "If you can't scan the QR code, use these details:"}
-                              </p>
-                              <div className="space-y-2 text-sm">
-                                {esimDetails.ac && (
-                                  <div className="bg-white rounded-lg p-3 border border-slate-200">
-                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
-                                      {t("activationCode") || "Activation Code"}
-                                    </label>
-                                    <p className="text-slate-900 font-mono break-all">
-                                      {esimDetails.ac}
-                                    </p>
-                                  </div>
-                                )}
-                                {esimDetails.apn && (
-                                  <div className="bg-white rounded-lg p-3 border border-slate-200">
-                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
-                                      {t("apn") || "APN"}
-                                    </label>
-                                    <p className="text-slate-900 font-mono break-all">
-                                      {esimDetails.apn}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </Card>
-                          )}
                         </div>
                       )}
                     </div>
@@ -1411,7 +1828,7 @@ export default function GuestCheckout() {
               )}
 
               {/* Payment Instructions */}
-              {paymentDetails && (
+              {!esimDetails && paymentDetails && (
                 <div className="mt-8 space-y-6">
                   <div className="space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
