@@ -81,7 +81,9 @@ export default function Checkout() {
           {selectedPlan && (
             <Card className="mb-8">
               <div className="flex items-start gap-4">
-                <div className="text-4xl shrink-0">{selectedPlan.plan.flag}</div>
+                <div className="text-4xl shrink-0">
+                  {selectedPlan.plan.flag}
+                </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-lg text-slate-900 mb-1">
                     {selectedPlan.plan.country}
@@ -115,6 +117,7 @@ export default function Checkout() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Login to Purchase Card */}
             <Card
+              disabled
               hover
               className="cursor-pointer group relative overflow-hidden"
               onClick={() => {
