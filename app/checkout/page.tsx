@@ -102,9 +102,9 @@ export default function Checkout() {
                     </span>
                   </div>
                   <p className="text-xl font-bold text-emerald-700">
-                    {new Intl.NumberFormat("en-US", {
+                    {new Intl.NumberFormat("mn-MN", {
                       style: "currency",
-                      currency: "USD",
+                      currency: "MNT",
                       minimumFractionDigits: 2,
                     }).format(Number(selectedPlan.package.buyPrice))}
                   </p>
