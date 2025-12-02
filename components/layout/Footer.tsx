@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -8,12 +9,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-3">
             <div className="flex items-center">
-              <span className="text-xl font-bold bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                GOY
-              </span>
-              <span className="text-xl font-bold text-slate-800 ml-1">
-                eSIM
-              </span>
+              <Image
+                src="/goysim_logo.jpg"
+                alt="GOY eSIM"
+                width={100}
+                height={100}
+                className="h-8 w-8 object-contain"
+              />
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
               Your global connectivity solution. Stay connected anywhere, anytime.

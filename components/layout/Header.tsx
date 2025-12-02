@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navigation from './Navigation';
 import LanguageSwitcher from '../LanguageSwitcher';
 
@@ -14,12 +15,14 @@ export default function Header() {
         {/* Logo */}
         <Link href={`/`} className="flex items-center space-x-2 group">
           <div className="flex items-center transition-transform group-hover:scale-105">
-            <span className="text-2xl md:text-3xl font-extrabold bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-              GOY
-            </span>
-            <span className="text-2xl md:text-3xl font-extrabold text-slate-800 ml-1">
-              eSIM
-            </span>
+            <Image
+              src="/goysim_logo.jpg"
+              alt="GOY eSIM"
+              width={120}
+              height={120}
+              className="h-10 w-10 md:h-12 md:w-12 object-contain"
+              priority
+            />
           </div>
         </Link>
         

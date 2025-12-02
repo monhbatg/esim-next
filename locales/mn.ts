@@ -107,7 +107,7 @@ export default {
   enterPhoneNumber: "Утасны дугаараа оруулна уу",
   enterPhoneDesc: "Бид захиалгын мэдээллийг илгээхэд ашиглана",
   phoneNumber: "Утасны дугаар",
-  phonePlaceholder: "+97612345678",
+  phonePlaceholder: "12345678",
   phoneRequired: "Утасны дугаар шаардлагатай",
   phoneInvalid: "Зөв утасны дугаар оруулна уу",
   enterEmail: "Имэйл хаягаа оруулна уу",

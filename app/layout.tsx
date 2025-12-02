@@ -9,6 +9,13 @@ import { LocaleProvider } from "@/contexts/LocaleContext";
 export const metadata = {
   title: "GOY eSIM - Global Connectivity Solution",
   description: "Experience seamless global connectivity with instant eSIM activation",
+  icons: {
+    icon: [
+      { url: "/goysim_logo.jpg", type: "image/jpeg" },
+    ],
+    shortcut: "/goysim_logo.jpg",
+    apple: "/goysim_logo.jpg",
+  },
 };
 
 const geistSans = Geist({

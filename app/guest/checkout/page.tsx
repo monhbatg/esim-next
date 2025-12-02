@@ -292,9 +292,9 @@ export default function GuestCheckout() {
   const qrImageSrc = getQrImageSrc();
 
   const validatePhone = (value: string): boolean => {
-    // Basic phone validation - adjust regex as needed
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(value.replace(/\s/g, ""));
+    // Remove spaces and optional + prefix, then check for exactly 8 digits
+    const cleaned = value.replace(/\s/g, "").replace(/^\+/, "");
+    return /^\d{8}$/.test(cleaned);
   };
 
   const validateEmail = (value: string): boolean => {
@@ -311,8 +311,20 @@ export default function GuestCheckout() {
       return;
     }
 
+    // Remove spaces and optional + prefix for length check
+    const cleaned = trimmedPhone.replace(/\s/g, "").replace(/^\+/, "");
+
+    if (cleaned.length !== 8) {
+      setPhoneError(
+        t("phoneInvalid") || "Phone number must be exactly 8 digits"
+      );
+      return;
+    }
+
     if (!validatePhone(trimmedPhone)) {
-      setPhoneError(t("phoneInvalid"));
+      setPhoneError(
+        t("phoneInvalid") || "Phone number must be exactly 8 digits"
+      );
       return;
     }
 
@@ -566,12 +578,25 @@ export default function GuestCheckout() {
                   type="tel"
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    let value = e.target.value;
+
+                    const digitsOnly = value.replace(/\D/g, "");
+
+                    const limitedDigits = digitsOnly.slice(0, 8);
+
+                    if (value.startsWith("+") && limitedDigits.length > 0) {
+                      value = `+${limitedDigits}`;
+                    } else {
+                      value = limitedDigits;
+                    }
+
+                    setPhone(value);
                     setPhoneError("");
                   }}
                   placeholder={t("phonePlaceholder")}
                   error={phoneError}
                   required
+                  maxLength={9}
                 />
 
                 <Button type="submit" className="w-full" size="lg">
@@ -1220,13 +1245,15 @@ export default function GuestCheckout() {
                                       link.href = blobUrl;
                                       link.download = `esim-qr-code-${
                                         esimDetails.orderNo || "unknown"
-                                      }-${esimDetails.esimTranNo || "unknown"}-${
+                                      }-${
+                                        esimDetails.esimTranNo || "unknown"
+                                      }-${
                                         new Date().toISOString().split("T")[0]
                                       }.png`;
                                       link.style.display = "none";
                                       document.body.appendChild(link);
                                       link.click();
-                                      
+
                                       // Clean up after a short delay
                                       setTimeout(() => {
                                         document.body.removeChild(link);
@@ -1237,14 +1264,17 @@ export default function GuestCheckout() {
                                         "Failed to download QR code:",
                                         error
                                       );
-                                      
+
                                       // Fallback: try direct download
                                       try {
-                                        const link = document.createElement("a");
+                                        const link =
+                                          document.createElement("a");
                                         link.href = esimDetails.qrCodeUrl;
                                         link.download = `esim-qr-code-${
                                           esimDetails.orderNo || "unknown"
-                                        }-${esimDetails.esimTranNo || "unknown"}-${
+                                        }-${
+                                          esimDetails.esimTranNo || "unknown"
+                                        }-${
                                           new Date().toISOString().split("T")[0]
                                         }.png`;
                                         link.target = "_blank";

@@ -111,7 +111,7 @@ export default {
   enterPhoneNumber: "Enter Your Phone Number",
   enterPhoneDesc: "We'll use this to send you order updates",
   phoneNumber: "Phone Number",
-  phonePlaceholder: "+1234567890",
+  phonePlaceholder: "12345678",
   phoneRequired: "Phone number is required",
   phoneInvalid: "Please enter a valid phone number",
   enterEmail: "Enter Your Email",

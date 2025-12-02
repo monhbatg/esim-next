@@ -104,7 +104,7 @@ export default {
   enterPhoneNumber: "输入您的电话号码",
   enterPhoneDesc: "我们将使用此号码向您发送订单更新",
   phoneNumber: "电话号码",
-  phonePlaceholder: "+861234567890",
+  phonePlaceholder: "12345678",
   phoneRequired: "电话号码是必填项",
   phoneInvalid: "请输入有效的电话号码",
   enterEmail: "输入您的电子邮件",
