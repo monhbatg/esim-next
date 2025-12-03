@@ -759,14 +759,14 @@ export default function Marketplace() {
                       <div className="flex-1">
                         <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-1">
                           {locale === "mn"
-                            ? `Доступ улсууд`
+                            ? `Боломжит улсууд`
                             : locale === "zh"
                             ? `可用国家`
                             : `Available Countries`}
                         </h2>
                         <p className="text-slate-600 text-sm md:text-base">
                           {locale === "mn"
-                            ? "Улс сонгоод боломжтой eSIM төлөвлөгөөгүүдийг харах"
+                            ? "Улс сонгоод дата багцуудтай танилцаарай"
                             : locale === "zh"
                             ? "选择一个国家以查看可用的 eSIM 计划"
                             : "Select a country to view available eSIM plans"}
