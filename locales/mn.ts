@@ -6,6 +6,7 @@ export default {
   topUp: "Цэнэглэх",
   about: "Бидний тухай",
   profile: "Профайл",
+  monitoring: "Удирдлага",
   signIn: "Нэвтрэх",
   signOut: "Гарах",
   welcomeBack: "Тавтай морил",

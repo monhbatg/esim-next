@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           preferences: profileData.preferences,
           totalEsims: 0, // Will be populated from other endpoints if available
           activeEsims: 0, // Will be populated from other endpoints if available
+          role: profileData.role
         };
 
         setUser(user);
@@ -153,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         memberSince: authData.createdAt.toString(),
         totalEsims: 0, // Will be populated from profile API later
         activeEsims: 0, // Will be populated from profile API later
+        role: authData.role
       };
 
       setUser(user);
@@ -237,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         memberSince: authData.createdAt.toString(),
         totalEsims: 0, // Will be populated from profile API later
         activeEsims: 0, // Will be populated from profile API later
+        role: authData.role
       };
 
       setUser(user);

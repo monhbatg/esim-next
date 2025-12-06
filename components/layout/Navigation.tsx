@@ -6,12 +6,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const getNavigationItems = () => [
-  { name: "home", href: `/`, protected: false },
-  { name: "marketplace", href: `/marketplace`, protected: false },
-  // { name: "topUp", href: `/guest/topup`, protected: false },
-  { name: "guide", href: `/guide`, protected: false },
-  { name: "about", href: `/about`, protected: false },
-  { name: "profile", href: `/profile`, protected: true },
+  { name: 'home', href: `/`, protected: false },
+  { name: 'marketplace', href: `/marketplace`, protected: false },
+ // { name: 'topUp', href: `/guest/topup`, protected: false },
+  { name: 'monitoring', href: `/monitoring`, protected: true, role: "ADMIN"},
+  { name: 'guide', href: `/guide`, protected: false },
+  { name: 'about', href: `/about`, protected: false },
+  { name: 'profile', href: `/profile`, protected: true },
 ];
 
 interface NavigationProps {
@@ -26,9 +27,18 @@ export default function Navigation({ onLinkClick, isMobile }: NavigationProps) {
   const { isAuthenticated, logout, user } = useAuth();
 
   // Filter navigation items: show profile only when authenticated
-  const navigationItems = getNavigationItems().filter((item) =>
-    item.name === "profile" ? isAuthenticated : true
-  );
+  const navigationItems = getNavigationItems().filter((item) => {
+  // 1. Protected links require login
+  if (item.protected && !isAuthenticated) return false;
+
+  // 2. Role-based restriction
+  if (item.role && user?.role !== item.role) return false;
+
+  // 3. Profile only for logged users
+  if (item.name === "profile" && !isAuthenticated) return false;
+
+  return true;
+});
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
