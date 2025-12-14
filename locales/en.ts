@@ -2,7 +2,7 @@
 export default {
   // Header & Navigation
   home: "Home",
-  marketplace: "Marketplace",
+  marketplace: "eSIM",
   topUp: "Top Up",
   about: "About",
   profile: "Profile",
