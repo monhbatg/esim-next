@@ -5,6 +5,7 @@ export default {
   marketplace: "eSIM авах",
   topUp: "Цэнэглэх",
   about: "Бидний тухай",
+  monitoring: "Удирдлага",
   profile: "Нэвтрэх",
   signIn: "Нэвтрэх",
   signOut: "Гарах",

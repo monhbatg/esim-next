@@ -6,6 +6,7 @@ export default {
   topUp: "Top Up",
   about: "About",
   profile: "Profile",
+  monitoring: "Monitoring",
   signIn: "Sign In",
   signOut: "Sign Out",
   welcomeBack: "Welcome back",

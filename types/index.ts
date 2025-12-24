@@ -25,6 +25,7 @@ export interface User {
   preferences?: UserPreferences;
   totalEsims: number;
   activeEsims: number;
+  role: string;
 }
 
 // Full user profile from /users/me endpoint
@@ -40,6 +41,7 @@ export interface UserProfile {
   updatedAt: string;
   preferredCurrency: string;
   preferences: UserPreferences;
+  role: string;
 }
 
 // eSIM Plan Types
@@ -113,6 +115,7 @@ export interface AuthResponseDto {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
+  role: string;
 }
 
 // Navigation Types
