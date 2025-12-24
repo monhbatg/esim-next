@@ -29,12 +29,18 @@ function CheckPaymentContent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Check if orderId is in URL params
     const orderId = searchParams.get("orderId");
-    if (orderId) {
+
+    if (!orderId || isChecking || paymentInfo?.status === "PAID") return;
+
+    setIdentifier(orderId);
+
+    const timer = setTimeout(() => {
       checkPaymentStatus(orderId);
-    }
-  }, [searchParams]);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [searchParams, isChecking, paymentInfo?.status]);
 
   const checkPaymentStatus = async (value: string) => {
     setIsChecking(true);
@@ -155,9 +161,7 @@ function CheckPaymentContent() {
             <h1 className="text-4xl md:text-5xl font-extrabold mb-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent">
               {t("checkPaymentStatus")}
             </h1>
-            <p className="text-slate-600 text-lg">
-              {t("checkPaymentDesc")}
-            </p>
+            <p className="text-slate-600 text-lg">{t("checkPaymentDesc")}</p>
           </div>
 
           {/* Check Form */}
@@ -225,9 +229,13 @@ function CheckPaymentContent() {
           {paymentInfo && (
             <div className="space-y-6">
               {/* Status Card */}
-              <Card className={`border-2 ${getStatusColor(paymentInfo.status)}`}>
+              <Card
+                className={`border-2 ${getStatusColor(paymentInfo.status)}`}
+              >
                 <div className="flex items-center gap-4">
-                  <div className="shrink-0">{getStatusIcon(paymentInfo.status)}</div>
+                  <div className="shrink-0">
+                    {getStatusIcon(paymentInfo.status)}
+                  </div>
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-1">
                       {t("paymentStatus")} {paymentInfo.status}
@@ -317,33 +325,25 @@ function CheckPaymentContent() {
                           <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
                             1
                           </span>
-                          <span>
-                            {t("installationStep1")}
-                          </span>
+                          <span>{t("installationStep1")}</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
                             2
                           </span>
-                          <span>
-                            {t("installationStep2")}
-                          </span>
+                          <span>{t("installationStep2")}</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
                             3
                           </span>
-                          <span>
-                            {t("installationStep3")}
-                          </span>
+                          <span>{t("installationStep3")}</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
                             4
                           </span>
-                          <span>
-                            {t("installationStep4")}
-                          </span>
+                          <span>{t("installationStep4")}</span>
                         </li>
                       </ol>
                     </div>
@@ -381,20 +381,21 @@ function CheckPaymentContent() {
 
 export default function CheckPayment() {
   return (
-    <Suspense fallback={
-      <div className="py-12 md:py-20 bg-gradient-to-b from-white via-slate-50 to-white min-h-screen">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-slate-600">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="py-12 md:py-20 bg-gradient-to-b from-white via-slate-50 to-white min-h-screen">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-slate-600">Loading...</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <CheckPaymentContent />
     </Suspense>
   );
 }
-
