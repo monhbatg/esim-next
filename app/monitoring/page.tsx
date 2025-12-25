@@ -169,7 +169,7 @@ const Monitoring: React.FC = () => {
               <option value="yesterday">Өчигдөр</option>
               <option value="last_week">Сүүлийн 1 долоо хоног</option>
               <option value="last_two_week">Сүүлийн 2 долоо хоног</option>
-              <option value="last_month">Сүүлийн сар</option>
+              <option value="last_month">Сүүлийн 1 сар</option>
             </select>
           </div>
 
