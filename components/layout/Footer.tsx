@@ -1,7 +1,11 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from '@/contexts/LocaleContext';
 
 export default function Footer() {
+  const t = useTranslations();
   return (
     <footer className="w-full border-t border-emerald-100 bg-linear-to-b from-white to-slate-100">
       <div className="container mx-auto px-4 md:px-6 py-12">
@@ -18,29 +22,29 @@ export default function Footer() {
               />
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Your global connectivity solution. Stay connected anywhere, anytime.
+              {t("footerGoal")}
             </p>
           </div>
 
           {/* Product */}
           <div>
             <h3 className="mb-3 text-sm font-bold text-slate-900">
-              Product
+              {t("footerProduct")}
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/marketplace" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Marketplace
+                  {t("footerMarketPlace")}
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  About
+                  {t("footerAbout")}
                 </Link>
               </li>
               <li>
                 <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Pricing
+                  {t("footerPricing")}
                 </a>
               </li>
             </ul>
@@ -49,46 +53,41 @@ export default function Footer() {
           {/* Support */}
           <div>
             <h3 className="mb-3 text-sm font-bold text-slate-900">
-              Support
+              {t("footerSupport")}
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Help Center
+                <a href="/guide" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                  {t("footerHelp")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Contact Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  FAQ
+                <a href="/guide/#common-questions" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                  {t("footerFAQ")}
                 </a>
               </li>
             </ul>
-          </div>
+          </div>  
 
           {/* Legal */}
           <div>
             <h3 className="mb-3 text-sm font-bold text-slate-900">
-              Legal
+              {t("footerContactUs")}
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Privacy Policy
+                <a href="+ 976-6001-6363" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                  + 976 6001-6363
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Terms of Service
+                <a href="mailto:esimgoy@gmail.com" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                  esimgoy@gmail.com
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                  Cookie Policy
+                <a href="https://www.facebook.com/goyesim" className="text-slate-600 hover:text-emerald-600 transition-colors">
+                  facebook.com/goyesim
                 </a>
               </li>
             </ul>
