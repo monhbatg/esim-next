@@ -138,7 +138,7 @@ export default {
   paymentInvoiceReady: "Invoice ready",
   scanQrCodeToPay: "Scan & pay with your banking app",
   scanQrCodeDesc:
-    "Use the QR code or open the QPay link below to complete your purchase.",
+    "Scan the code with your phone's QR reader and install it 🍀 Have a comfortable journey ✨️✈️",
   openInBankApp: "Open in banking app",
   qrCodeExpires: "QR code expires in 15 minutes",
   invoiceId: "Invoice ID",
@@ -368,4 +368,51 @@ export default {
   a4: "Check your device settings or contact your eSIM provider's app/website for data usage details.",
   q5: "Can I share my eSIM QR code with others?",
   a5: "No, your eSIM QR code is unique to you and should not be shared with others.",
+  
+  footerGoal: "Your global connectivity solution. Stay connected anywhere, anytime.",
+  footerPricing: "Pricing",
+  footerAbout: "About us",
+  footerMarketPlace: "eSIM buy",
+  footerHelp: "Help Center",
+  footerContactUs: "Contact Us",
+  footerFAQ: "FAQ",
+  footerPrivacyPolicy: "Privacy Policy",
+  footerTermsOfService: "Terms of Service",
+  footerProduct: "Product",
+  footerSupport: "Support",
+  footerLegal: "Legal",
+
+  activeUsersCount: "Active Users",
+  esimActivatedCount: "eSIMs Activated",
+  countryCount: "Countries",
+  userRating: "User Rating",
+  ourStoryTitle: "Our Story",
+  ourStory: "Founded in 2025, GOY eSIM was born from the frustration of dealing with traditional " +
+            "SIM cards while traveling. Our founders, frequent travelers themselves, experienced " +
+            "firsthand the pain of switching SIM cards, losing connectivity, and paying exorbitant " +
+            "roaming fees",
+  ourStoryTwo: "Today, we're proud to serve thousands of customers worldwide, providing them with"+
+              "instant connectivity and the freedom to stay connected wherever their journey takes them.",
+
+  aboutTitle: "About GOY eSIM",          
+
+  ourMissionTitle: "Our Mission",
+
+  aboutDescription: "We're revolutionizing global connectivity by making eSIM technology accessible to everyone.",
+  ourMissionOne: "At GOY eSIM, we believe that staying connected shouldn't be complicated or"+ 
+              "expensive. Our mission is to provide seamless, affordable, and instant connectivity"+
+              "solutions for travelers and digital nomads worldwide.",
+  ourMissionTwo:
+              "We eliminate the hassle of hunting for local SIM cards, dealing with roaming charges,"+
+              "and managing multiple phone numbers. With our eSIM marketplace, you can connect"+
+              "to networks in over 190 countries with just a few taps.",
+
+  ourValuesTitle: "Our Values",
+  ourValuesMajor: "What drives us every day",
+  Simplicity: "Simplicity",
+  SimplicityDescription: "We make connectivity simple. No technical jargon, no complicated setup - just instant activation.",
+  Transparency: "Transparency",
+  TransparencyDescription: "Clear pricing, no hidden fees. What you see is what you pay - it's that straightforward.",
+  Innovation: "Innovation",
+  InnovationDescription: "We're constantly improving our platform to provide you with the best connectivity experience."
 };

@@ -278,7 +278,7 @@ export default function Guide() {
         </div>
 
         {/* Troubleshooting */}
-        <div className="max-w-5xl mx-auto mb-16">
+        <div id="troubleshooting" className="max-w-5xl mx-auto mb-16">
           <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-900">
             {t('troubleshooting')}
           </h2>
@@ -307,7 +307,7 @@ export default function Guide() {
         </div>
 
         {/* Common Questions */}
-        <div className="max-w-5xl mx-auto mb-16">
+        <div id="common-questions" className="max-w-5xl mx-auto mb-16">
           <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-900">
             {t('commonQuestions')}
           </h2>
@@ -359,4 +359,3 @@ export default function Guide() {
     </div>
   );
 }
-

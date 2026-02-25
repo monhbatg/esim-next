@@ -133,7 +133,7 @@ export default {
   paymentInvoiceReady: "Төлбөрийн нэхэмжлэл бэлэн боллоо",
   scanQrCodeToPay: "QR кодыг уншуулж төлбөрөө төлнө үү",
   scanQrCodeDesc:
-    "QPay дэмждэг банкны аппликейшнээр уншуулах эсвэл банкны аппликейшнрүү үсэрч төлбөрөө хийнэ үү.",
+    "Та утасныхаа QR уншигчаар кодыг уншуулан суулгаарай 🍀 аялал нь тухтай байг ✨️✈️",
   openInBankApp: "Банкны апп-аар нээх",
   qrCodeExpires: "QR код 15 минутын дараа хүчингүй болно",
   invoiceId: "Нэхэмжлэлийн ID",
@@ -365,5 +365,51 @@ export default {
   a4: "Төхөөрөмжийнхөө тохиргоог шалгах эсвэл имэйлээр илгээгдсэн QR холбоосны CHECK USAGE цэснээс үлдсэн датаны хэмжээг харна уу.",
   q5: "eSIM QR кодоо бусадтай хуваалцаж болох уу?",
   a5: "Тухайн QR нь зөвхөн нэг төхөөрөмжинд ашиглагдах тул давхар өөр төхөөрөмжинд холбохгүй байна уу! Харин Hotspot цацах боломжтой.",
-  aboutHeader: ""
+
+  footerGoal: "Таны дэлхийн холболтын шийдэл. Хаана ч, хэзээ ч холбоотой байгаарай.",
+  footerPricing: "Үнийн мэдээлэл",
+  footerAbout: "Бидний тухай",
+  footerMarketPlace: "eSIM авах",
+  footerHelp: "Тусламж",
+  footerContactUs: "Холбоо барих",
+  footerFAQ: "Түгээмэл асуултууд",
+  footerPrivacyPolicy: "Нууцлалын бодлого",
+  footerTermsOfService: "Үйлчилгээний нөхцөл",
+  footerProduct: "Бүтээгдэхүүн",
+  footerSupport: "Дэмжлэг",
+  footerLegal: "Хууль эрх зүй",
+
+  activeUsersCount: "Идэвхтэй хэрэглэгчид",
+  esimActivatedCount: "Идэвхжүүлсэн eSIM-үүд",
+  countryCount: "Улсууд",
+  userRating: "Хэрэглэгчийн үнэлгээ",
+  ourStoryTitle: "Манай түүх",
+  ourStory: "Founded in 2025, GOY eSIM was born from the frustration of dealing with traditional " +
+            "SIM cards while traveling. Our founders, frequent travelers themselves, experienced " +
+            "firsthand the pain of switching SIM cards, losing connectivity, and paying exorbitant " +
+            "roaming fees",
+  ourStoryTwo: "Today, we're proud to serve thousands of customers worldwide, providing them with"+
+              "instant connectivity and the freedom to stay connected wherever their journey takes them.",
+  
+  aboutTitle: "GOY eSIM тухай",
+
+  ourMissionTitle: "Our Mission",
+
+  aboutDescription: "We're revolutionizing global connectivity by making eSIM technology accessible to everyone.",
+  ourMissionOne: "At GOY eSIM, we believe that staying connected shouldn't be complicated or"+ 
+              "expensive. Our mission is to provide seamless, affordable, and instant connectivity"+
+              "solutions for travelers and digital nomads worldwide.",
+  ourMissionTwo:
+              "We eliminate the hassle of hunting for local SIM cards, dealing with roaming charges,"+
+              "and managing multiple phone numbers. With our eSIM marketplace, you can connect"+
+              "to networks in over 190 countries with just a few taps.",
+
+  ourValuesTitle: "Our Values",
+  ourValuesMajor: "What drives us every day",
+  Simplicity: "Simplicity",
+  SimplicityDescription: "We make connectivity simple. No technical jargon, no complicated setup - just instant activation.",
+  Transparency: "Transparency",
+  TransparencyDescription: "Clear pricing, no hidden fees. What you see is what you pay - it's that straightforward.",
+  Innovation: "Innovation",
+  InnovationDescription: "We're constantly improving our platform to provide you with the best connectivity experience.",
 };
