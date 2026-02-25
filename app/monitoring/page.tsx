@@ -52,6 +52,20 @@ interface SettingsReferenceData {
     description: string;
 }
 
+interface DashboardAnalys {
+  allTimeOrders: {
+      count: number
+      complated: number
+      incompated: number
+    };
+  allCustomers: {
+    totalCustomer: number
+    activeCustomer: number
+    thisMonthNew: number
+    mostBuyer: number
+  };
+}
+
 const Monitoring: React.FC = () => {
   const [salaryOpen, setSalaryOpen] = useState(false);
   const [timePeriod, setTimePeriod] = useState<string>("Today");
@@ -66,6 +80,19 @@ const Monitoring: React.FC = () => {
     rangedTranWithoutTax: 0,
     rangedTranPureAmount: 0
   });
+  const [dashboardAnalys, setDashboardAnalys] = useState<DashboardAnalys>({
+    allTimeOrders: {
+      count: 0,
+      complated: 0,
+      incompated: 0
+    },
+    allCustomers: {
+      totalCustomer: 0,
+      activeCustomer: 0,
+      thisMonthNew: 0,
+      mostBuyer: 0,
+    }
+  })
   const [settingsReference, setSettingsReferenceData] = useState<SettingsReferenceData[]>([
   {
     id: "",
@@ -102,6 +129,8 @@ const Monitoring: React.FC = () => {
   const fetchDashboardData = async (timePeriod: string) => {
     setLoading(true);
     try {
+      const dashboardResp = await monitoringApi.getDashboard();
+      setDashboardAnalys(dashboardResp);
       const response = await monitoringApi.getMonitoring(timePeriod);
       setDashboardData(response);
       setTransactions(response.rangedTransactions);
@@ -157,6 +186,42 @@ const Monitoring: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
 
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <Card className="p-8 bg-gradient-to-r from-green-500 to-white-500 rounded-lg shadow-lg">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-2xl font-bold text-white">Харилцагч</div>
+                <div className="text-lg font-medium text-black">Шинэ/Энэ сар/</div>
+              </div>
+              <div className="flex justify-between">
+                <div className="text-3xl font-extrabold text-white">{dashboardAnalys.allCustomers.totalCustomer}</div>
+                <div className="text-3xl font-extrabold text-black">{dashboardAnalys.allCustomers.thisMonthNew}</div>
+              </div>
+            </Card>
+
+            <Card className="p-6 bg-gradient-to-r from-gray-500 to-white-500  rounded-lg shadow-lg">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-2xl font-bold text-white">Захиалга</div>
+                <div className="text-lg font-medium text-black">Амжилттай</div>
+              </div>
+              <div className="flex justify-between">
+                <div className="text-3xl font-extrabold text-white">{dashboardAnalys.allTimeOrders.count}</div>
+                <div className="text-3xl font-extrabold text-black">{dashboardAnalys.allTimeOrders.complated}</div>
+              </div>
+            </Card>
+
+            <Card className="p-6 bg-gradient-to-r from-blue-500 to-white-500 rounded-lg shadow-lg">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-2xl font-bold text-white">Идэвхтэй</div>
+                <div className="text-lg font-medium text-black">Дахин авсан</div>
+              </div>
+              <div className="flex justify-between">
+                <div className="text-3xl font-extrabold text-white">{dashboardAnalys.allCustomers.activeCustomer}</div>
+                <div className="text-3xl font-extrabold text-black">{dashboardAnalys.allCustomers.mostBuyer}</div>
+              </div>
+            </Card>
+          </div>
+
           {/* Time Filter */}
           <div className="flex items-center mb-8">
             <label className="mr-4 text-lg font-medium">Хайх хугацаа</label>
@@ -169,7 +234,7 @@ const Monitoring: React.FC = () => {
               <option value="yesterday">Өчигдөр</option>
               <option value="last_week">Сүүлийн 1 долоо хоног</option>
               <option value="last_two_week">Сүүлийн 2 долоо хоног</option>
-              <option value="last_month">Сүүлийн сар</option>
+              <option value="last_month">Сүүлийн 1 сар</option>
             </select>
           </div>
 

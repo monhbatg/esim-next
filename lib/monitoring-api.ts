@@ -97,6 +97,20 @@ interface ApiResponse<T> {
   statusCode: number;
 }
 
+interface DashboardAnalys {
+  allTimeOrders: {
+      count: number
+      complated: number
+      incompated: number
+    };
+  allCustomers: {
+    totalCustomer: number
+    activeCustomer: number
+    thisMonthNew: number
+    mostBuyer: number
+  };
+}
+
 export const monitoringApi = {
     getMonitoring: async (timePeriod?: String): Promise<DashboardData> => {
         const params = new URLSearchParams();
@@ -153,5 +167,13 @@ export const monitoringApi = {
       }else{
         throw new Error(response.message);
       }
-    }
+    },
+    getDashboard: async (): Promise<DashboardAnalys> => {
+        const url = `/api/users/dashboard`;
+        const response = await api.get<DashboardAnalys>(url);
+        if (!response.success || !response.data) {
+            throw new Error(response.error || 'Failed to fetch marketplace data');
+        }
+        return response.data;
+    },
 }
