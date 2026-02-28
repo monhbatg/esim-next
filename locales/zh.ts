@@ -7,6 +7,7 @@ export default {
   about: "关于",
   profile: "个人资料",
   monitoring: "Monitoring",
+  operator: "operator",
   signIn: "登录",
   signOut: "退出",
   welcomeBack: "欢迎回来",
