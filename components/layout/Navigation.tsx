@@ -10,6 +10,7 @@ const getNavigationItems = () => [
   { name: 'marketplace', href: `/marketplace`, protected: false },
  // { name: 'topUp', href: `/guest/topup`, protected: false },
   { name: 'monitoring', href: `/monitoring`, protected: true, role: "ADMIN"},
+  { name: 'operator', href: `/operator`, protected: true, role: "ADMIN"},
   { name: 'guide', href: `/guide`, protected: false },
   { name: 'about', href: `/about`, protected: false },
   { name: 'profile', href: `/profile`, protected: true },

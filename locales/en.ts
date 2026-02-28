@@ -1,3 +1,5 @@
+import Operator from "@/app/operator/page";
+
 /* eslint-disable import/no-anonymous-default-export */
 export default {
   // Header & Navigation
@@ -7,6 +9,7 @@ export default {
   about: "About",
   profile: "Profile",
   monitoring: "Monitoring",
+  operator: "operator",
   signIn: "Sign In",
   signOut: "Sign Out",
   welcomeBack: "Welcome back",
