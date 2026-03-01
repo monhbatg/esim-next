@@ -135,9 +135,9 @@ function convertPackageToPlan(
 
     // Add data information based on package data
     if (pkg.dataType === 1) {
-      features.push("Unlimited Data");
-    } else if (pkg.volume) {
       features.push(`${formatDataVolume(pkg.volume)} Data`);
+    } else if (pkg.volume) {
+      features.push("Unlimited Data");
     }
 
     // Add duration info
