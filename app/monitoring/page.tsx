@@ -382,8 +382,23 @@ const Monitoring: React.FC = () => {
           <div className="flex justify-between items-center mt-4">
             <div>Showing {startIndex + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}</div>
             <div className="flex gap-3">
-              <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded-md">Previous</button>
-              <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gray-300 rounded-md">Next</button>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-5 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition disabled:opacity-30"
+              >
+                Previous
+              </button>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={
+                  currentPage === totalPages || totalPages === 0
+                }
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 transition disabled:opacity-30"
+              >
+                Next
+              </button>
             </div>
             <select value={itemsPerPage} onChange={(e) => handleItemsPerPageChange(Number(e.target.value))} className="px-3 py-2 border rounded-md">
               <option value={10}>10 per page</option>
