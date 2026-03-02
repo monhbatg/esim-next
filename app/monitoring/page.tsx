@@ -282,49 +282,100 @@ const Monitoring: React.FC = () => {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="p-6 w-full table-auto border-collapse border border-gray-300 bg-white shadow-sm rounded-lg">
-              <thead className="bg-gradient-to-r from-gray-300 text-gray-700">
-                <tr>
-                  <th colSpan={6}></th>
-                  <th className="py-2 text-left"><div>${dashboardData.rangedTranPriecUSD}</div></th>
-                  <th className="py-2 text-left"><div>{dashboardData.rangedTranPriceMNT}₮</div></th>
-                  <th className="py-2 text-left"><div className="text-yellow-500">{dashboardData.rangedTranWithTax}₮</div></th>
-                  <th className="py-2 text-left"><div className="text-green-500">{dashboardData.rangedTranWithoutTax}₮</div></th>
-                  <th className="py-2 text-left"><div className="text-green-500">{dashboardData.rangedTranPureAmount}₮</div></th>
-                </tr>
-                <tr>
-                  <th className="py-2 px-3">№</th>
-                  <th>Огноо</th>
-                  <th>Багцын нэр</th>
-                  <th>Гүйлгээний төрөл</th>
-                  <th>Утас</th>
-                  <th>И-мэйл</th>
-                  <th>Авсан үнэ</th>
-                  <th>Хөрвөсөн дүн</th>
-                  <th>Зарсан үнэ</th>
-                  <th>Суутгалгүй дүн</th>
-                  <th>Цэвэр дүн</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((transaction, index) => (
-                  <tr key={index} className="hover:bg-gray-100">
-                    <td className="py-2 px-3">{index + 1}</td>
-                    <td className="py-2 text-center">{transaction.transactionDate}</td>
-                    <td className="py-2 text-center">{transaction.packageName}</td>
-                    <td className="py-2 text-center">{transaction.transactionType}</td>
-                    <td className="py-2 text-center">{transaction.customerPhone}</td>
-                    <td className="py-2 text-center">{transaction.customerMail}</td>
-                    <td className="py-2 text-center">${transaction.supplyAmount}</td>
-                    <td className="py-2 text-center">{transaction.supplyAmountMNT}₮</td>
-                    <td className="py-2 text-center">{transaction.buyAmountWithTax}₮</td>
-                    <td className="py-2 text-center">{transaction.buyAmountWithoutTax}₮</td>
-                    <td className="py-2 text-center">{transaction.pureAmount}₮</td>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/70 backdrop-blur-xl shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-slate-700">
+                <thead className="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                  {/* Summary Row */}
+                  <tr className="bg-slate-800 text-slate-200">
+                    <th colSpan={6}></th>
+                    <th className="py-3 px-4 text-left font-semibold">
+                      ${dashboardData.rangedTranPriecUSD}
+                    </th>
+                    <th className="py-3 px-4 text-left font-semibold">
+                      {dashboardData.rangedTranPriceMNT}₮
+                    </th>
+                    <th className="py-3 px-4 text-left font-semibold text-yellow-400">
+                      {dashboardData.rangedTranWithTax}₮
+                    </th>
+                    <th className="py-3 px-4 text-left font-semibold text-emerald-400">
+                      {dashboardData.rangedTranWithoutTax}₮
+                    </th>
+                    <th className="py-3 px-4 text-left font-semibold text-emerald-300">
+                      {dashboardData.rangedTranPureAmount}₮
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+
+                  {/* Header Row */}
+                  <tr>
+                    <th className="py-4 px-4 text-left">№</th>
+                    <th className="py-4 px-4 text-left">Огноо</th>
+                    <th className="py-4 px-4 text-left">Багцын нэр</th>
+                    <th className="py-4 px-4 text-center">Гүйлгээний төрөл</th>
+                    <th className="py-4 px-4 text-center">Утас</th>
+                    <th className="py-4 px-4 text-center">И-мэйл</th>
+                    <th className="py-4 px-4 text-right">Авсан үнэ</th>
+                    <th className="py-4 px-4 text-right">Хөрвөсөн дүн</th>
+                    <th className="py-4 px-4 text-right">Зарсан үнэ</th>
+                    <th className="py-4 px-4 text-right">Суутгалгүй дүн</th>
+                    <th className="py-4 px-4 text-right">Цэвэр дүн</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-200">
+                  {currentItems.map((transaction, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-slate-50 transition-all duration-200"
+                    >
+                      <td className="py-4 px-4 font-medium text-slate-500">
+                        {index + 1}
+                      </td>
+                  
+                      <td className="py-4 px-4 font-mono text-xs text-slate-600">
+                        {transaction.transactionDate}
+                      </td>
+                  
+                      <td className="py-4 px-4 font-semibold">
+                        {transaction.packageName}
+                      </td>
+                  
+                      <td className="py-4 px-4 text-center text-slate-600">
+                        {transaction.transactionType}
+                      </td>
+                  
+                      <td className="py-4 px-4 text-center text-slate-600">
+                        {transaction.customerPhone}
+                      </td>
+                  
+                      <td className="py-4 px-4 text-center text-slate-600">
+                        {transaction.customerMail}
+                      </td>
+                  
+                      <td className="py-4 px-4 text-right font-semibold text-indigo-600">
+                        ${transaction.supplyAmount}
+                      </td>
+                  
+                      <td className="py-4 px-4 text-right font-semibold">
+                        {transaction.supplyAmountMNT}₮
+                      </td>
+                  
+                      <td className="py-4 px-4 text-right font-semibold text-yellow-600">
+                        {transaction.buyAmountWithTax}₮
+                      </td>
+                  
+                      <td className="py-4 px-4 text-right font-semibold text-emerald-600">
+                        {transaction.buyAmountWithoutTax}₮
+                      </td>
+                  
+                      <td className="py-4 px-4 text-right font-bold text-emerald-700">
+                        {transaction.pureAmount}₮
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Pagination */}
