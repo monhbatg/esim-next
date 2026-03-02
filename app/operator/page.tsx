@@ -124,98 +124,82 @@ const Operator: React.FC = () => {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/70 backdrop-blur-xl shadow-xl">
-            <table className="w-full text-sm text-slate-700">
-              <thead className="bg-slate-900 text-white text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="py-4 px-4 text-left">№</th>
-                  <th className="py-4 px-4 text-left">Огноо</th>
-                  <th className="py-4 px-4 text-left">Нэр</th>
-                  <th className="py-4 px-4 text-center">Төлөв</th>
-                  <th className="py-4 px-4 text-center">Утас</th>
-                  <th className="py-4 px-4 text-center">И-мэйл</th>
-                  <th className="py-4 px-4 text-right">Дүн</th>
-                  <th className="py-4 px-4 text-center">Үйлдэл</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-200">
-                {loading ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-slate-700">
+                <thead className="bg-slate-900 text-white text-xs uppercase tracking-wider">
                   <tr>
-                    <td colSpan={8} className="text-center py-10 text-slate-400">
-                      Loading...
-                    </td>
+                    <th className="py-4 px-4 text-left">№</th>
+                    <th className="py-4 px-4 text-left">Огноо</th>
+                    <th className="py-4 px-4 text-left">Нэр</th>
+                    <th className="py-4 px-4 text-center">Төлөв</th>
+                    <th className="py-4 px-4 text-center">Утас</th>
+                    <th className="py-4 px-4 text-center">И-мэйл</th>
+                    <th className="py-4 px-4 text-right">Дүн</th>
+                    <th className="py-4 px-4 text-center">Үйлдэл</th>
                   </tr>
-                ) : currentItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center py-10 text-slate-400">
-                      No data found
-                    </td>
-                  </tr>
-                ) : (
-                  currentItems.map((invoiceItem, index) => (
-                    <tr
-                      key={invoiceItem.invoice_id}
-                      className="hover:bg-slate-50 transition-all duration-200"
-                    >
-                      <td className="py-4 px-4">
-                        {startIndex + index + 1}
-                      </td>
+                </thead>
 
-                      <td className="py-4 px-4 font-mono text-xs text-slate-600">
-                        {new Date(invoiceItem.invoice_createdAt)
-                          .toISOString()
-                          .slice(0, 19)
-                          .replace("T", " ")}
-                      </td>
-
-                      <td className="py-4 px-4 font-semibold">
-                        {invoiceItem.package_name}
-                      </td>
-
-                      <td className="py-4 px-4 text-center">
-                        <StatusBadge
-                          status={invoiceItem.invoice_status}
-                        />
-                      </td>
-
-                      <td className="py-4 px-4 text-center">
-                        {invoiceItem.customer_phoneNumber}
-                      </td>
-
-                      <td className="py-4 px-4 text-center">
-                        {invoiceItem.customer_email}
-                      </td>
-
-                      <td className="py-4 px-4 text-right font-semibold text-emerald-600">
-                        {invoiceItem.invoice_amount.toLocaleString()}₮
-                      </td>
-
-                      <td className="py-4 px-4 text-center space-x-2">
-                        <button
-                          onClick={() => handleView(invoiceItem)}
-                          className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs hover:bg-red-500 transition"
-                        >
-                          Cancel
-                        </button>
-
-                        
-                        {invoiceItem.invoice_status === "PENDING" && (
-                          <button
-                            onClick={() =>
-                              handleCancel(invoiceItem.invoice_id)
-                            }
-                            className="px-3 py-1 rounded-lg bg-green-600 text-white text-xs hover:bg-green-500 transition"
-                          >
-                            Check
-                          </button>
-                        )}
-                        
+                <tbody className="divide-y divide-slate-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-10 text-slate-400">
+                        Loading...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-10 text-slate-400">
+                        No data found
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((invoiceItem, index) => (
+                      <tr
+                        key={invoiceItem.invoice_id}
+                        className="hover:bg-slate-50 transition-all duration-200"
+                      >
+                        <td className="py-4 px-4">
+                          {startIndex + index + 1}
+                        </td>
+
+                        <td className="py-4 px-4 font-mono text-xs text-slate-600">
+                          {new Date(invoiceItem.invoice_createdAt)
+                            .toISOString()
+                            .slice(0, 19)
+                            .replace("T", " ")}
+                        </td>
+
+                        <td className="py-4 px-4 font-semibold">
+                          {invoiceItem.package_name}
+                        </td>
+
+                        <td className="py-4 px-4 text-center">
+                          <StatusBadge
+                            status={invoiceItem.invoice_status}
+                          />
+                        </td>
+
+                        <td className="py-4 px-4 text-center">
+                          {invoiceItem.customer_phoneNumber}
+                        </td>
+
+                        <td className="py-4 px-4 text-center">
+                          {invoiceItem.customer_email}
+                        </td>
+
+                        <td className="py-4 px-4 text-right font-semibold text-emerald-600">
+                          {invoiceItem.invoice_amount.toLocaleString()}₮
+                        </td>
+
+                        <td className="py-4 px-4 text-center space-x-2">
+                          
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
             </table>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-8">
