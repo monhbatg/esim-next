@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 const getNavigationItems = () => [
   { name: 'home', href: `/`, protected: false },
   { name: 'marketplace', href: `/marketplace`, protected: false },
- // { name: 'topUp', href: `/guest/topup`, protected: false },
+  { name: 'topUp', href: `/guest/topup`, protected: false },
   { name: 'monitoring', href: `/monitoring`, protected: true, role: "ADMIN"},
   { name: 'operator', href: `/operator`, protected: true, role: "ADMIN"},
   { name: 'guide', href: `/guide`, protected: false },

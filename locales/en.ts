@@ -164,6 +164,8 @@ export default {
     "Enter your phone number or email to check your order status",
   phoneOrEmail: "Phone Number or Email",
   phoneOrEmailPlaceholder: "+1234567890 or your.email@example.com",
+  enterIccid: "Enter your ICCID",
+  iccidRequired: "20-character ICCID is required",
   phoneOrEmailRequired: "Please enter your phone number or email",
   checkStatus: "Check Status",
   checking: "Checking...",

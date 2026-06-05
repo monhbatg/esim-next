@@ -117,6 +117,20 @@ export const guestApi = {
     return response.data;
   },
 
+  searchTopupCards: async (iccid: string): Promise<GuestSimCard[]> => {
+    const response = await api.post<GuestSimCard[]>(
+      '/api/v1/open/esim/queryTopup',
+      { iccid },
+      { skipAuth: true }
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to search SIM cards');
+    }
+
+    return response.data;
+  },
+
   /**
    * Top up a SIM card (guest user)
    */

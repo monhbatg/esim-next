@@ -160,6 +160,8 @@ export default {
   phoneOrEmail: "Утасны дугаар эсвэл Имэйл",
   phoneOrEmailPlaceholder: "+97612345678 эсвэл таны.имэйл@жишээ.com",
   phoneOrEmailRequired: "Утасны дугаар эсвэл имэйл хаягаа оруулна уу",
+  enterIccid: "ICCID дугаараа оруулна уу",
+  iccidRequired: "20 оронтой ICCID дугаар шаардлагатай",
   checkStatus: "төлөв шалгах",
   checking: "Шалгаж байна...",
   checkingPayment: "Төлбөр шалгаж байна...",
@@ -233,10 +235,11 @@ export default {
 
   // Guest Top-Up
   topUpSimCard: "eSIM цэнэглэх",
-  topUpSimCardDesc: "Худалдан авсан eSIM хайн цэнэглэлт хийх",
+  topUpSimCardDesc: "Худалдан авсан eSIM хайн нэмэлтээр дата цэнэглэлт хийх",
   searchForSimCards: "eSIM-ээ хайх",
   searchForSimCardsDesc:
     "Худалдан авсан eSIM-ээ олохын тулд ICCID дугаараа оруулна уу",
+  searchEsimForTopUp: "Та худалдан авсан eSIM-ийнхээ ICCID дугаараа оруулна уу. Тайлбар: Өмнөх худалдан авалтаар мэйл дээр эсвэл чатаар өгсөн линк дээрээс энэхүү ICCID дугаарыг олох боломжтой.",
   invalidIdentifier: "Зөв дугаар оруулна уу",
   searching: "Хайж байна...",
   noSimCardsFound: "Энэ ICCID дээр eSIM байхгүй байна",
