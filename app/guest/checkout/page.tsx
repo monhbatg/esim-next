@@ -371,8 +371,8 @@ export default function GuestCheckout() {
       const payload = {
         phoneNumber: trimmedPhone,
         email: trimmedEmail,
-        // amount: 1, // for test
-        amount: amountToCharge,
+        amount: 1, // for test
+        // amount: amountToCharge,
         packageCode,
         description: planDescription || "eSIM Purchase",
       };

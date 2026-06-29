@@ -1,3 +1,4 @@
+import { EsimPackage } from '@/app/operator/page';
 import { api } from './api';
 
 /**
@@ -41,6 +42,18 @@ export interface PaymentStatusResponse {
   activationCode?: string;
 }
 
+export interface TopupQueryResponse {
+  success: boolean;
+  errorCode: string;
+  errorMsg: string | null;
+  obj: {
+    esimList: GuestSimCard[];
+    suggestPackage: EsimPackage[];
+    customerPhone: string;
+    customerEmail: string;
+  };
+}
+
 /**
  * Guest API
  * Handles guest checkout and payment status checking
@@ -52,6 +65,24 @@ export const guestApi = {
   checkout: async (data: GuestCheckoutRequest): Promise<GuestCheckoutResponse> => {
     const response = await api.post<GuestCheckoutResponse>(
       '/api/guest/checkout',
+      {
+        phone: data.phone,
+        email: data.email,
+        plan: data.plan,
+      },
+      { skipAuth: true }
+    );
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to create guest checkout');
+    }
+
+    return response.data;
+  },
+
+  checkoutTopup: async (data: GuestCheckoutRequest): Promise<GuestCheckoutResponse> => {
+    const response = await api.post<GuestCheckoutResponse>(
+      '/api/guest/checkoutTopup',
       {
         phone: data.phone,
         email: data.email,
@@ -117,19 +148,19 @@ export const guestApi = {
     return response.data;
   },
 
-  searchTopupCards: async (iccid: string): Promise<GuestSimCard[]> => {
-    const response = await api.post<GuestSimCard[]>(
-      '/api/v1/open/esim/queryTopup',
-      { iccid },
-      { skipAuth: true }
-    );
+  searchTopupCards: async (iccid: string): Promise<TopupQueryResponse> => {
+  const response = await api.post<TopupQueryResponse>(
+    '/api/v1/open/esim/queryTopup',
+    { iccid },
+    { skipAuth: true }
+  );
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to search SIM cards');
-    }
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'Failed to search SIM cards');
+  }
 
-    return response.data;
-  },
+  return response.data;
+},
 
   /**
    * Top up a SIM card (guest user)
@@ -167,7 +198,10 @@ export interface GuestSimCard {
   status: 'active' | 'expired' | 'pending';
   purchaseDate: string;
   planName?: string;
+  suggestPackage?: EsimPackage[];
+  object?: any; // Additional data from the API response
 }
+
 
 /**
  * Guest top-up request
