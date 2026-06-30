@@ -7,12 +7,19 @@ import { guestApi, GuestSimCard } from "@/lib/guest-api";
 import { EsimPackage } from "@/types";
 import { useTranslations } from "@/contexts/LocaleContext";
 import Link from "next/link";
-import { FormEvent, useCallback, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInvoiceStatus } from "@/lib/hooks/useInvoiceStatus";
 import { useTopupInvoiceStatus } from "@/lib/hooks/useTopupInvoiceStatus";
 
 type Step = 1 | 2 | 3 | 4 | 5;
+
+type PaymentAppLink = {
+  name: string;
+  description?: string;
+  logo?: string;
+  link: string;
+};
 
 type EsimDetails = {
   esimTranNo: string;
@@ -79,9 +86,30 @@ export default function GuestTopUp() {
     invoice_id: string;
     qr_image?: string;
     qr_link?: string;
+    qr_text?: string;
     qPay_shortUrl?: string;
-    urls?: Array<{ name: string; link: string; logo?: string; description?: string }>;
+    urls?: Array<PaymentAppLink>;
   } | null>(null);
+
+
+  const [popup, setPopup] = useState<{
+  show: boolean;
+  message: string;
+  type: "success" | "error";
+  }>({
+    show: false,
+    message: "",
+    type: "success",
+  });
+
+  const showPopup = (message: string, type: "success" | "error") => {
+  setPopup({ show: true, message, type });
+
+  setTimeout(() => {
+    setPopup({ show: false, message: "", type: "success" });
+  }, 2500);
+  };
+  
 
   // ---------------- SEARCH ----------------
   const handleSearch = async (e: FormEvent) => {
@@ -160,7 +188,7 @@ export default function GuestTopUp() {
   
         if (!response.ok) {
           throw new Error(
-            result.errorMsg || result.error || "Failed to fetch eSIM details"
+            "Хайлт хийхэд алдаа гарлаа"
           );
         }
   
@@ -312,8 +340,8 @@ export default function GuestTopUp() {
       const payload = {
         phoneNumber: phone.trim(),
         email: email.trim(),
-        //amount: selectedPlan.buyPrice,
-        amount:  1,  // For test
+        amount: Number(selectedPlan.buyPrice),
+        // amount:  1,  // For test
         packageCode,
         description: selectedPlan.name || "Top-up",
         iccId: baseEsim?.iccid || baseEsim?.icc || null,
@@ -333,20 +361,32 @@ export default function GuestTopUp() {
         throw new Error(data?.error || raw?.message || "Payment failed");
       }
 
-      if (!data?.invoice_id) {
+      if (!data?.invoice_id ||
+        !data?.qr_image ||
+        !(data?.qr_link || data?.qPay_shortUrl)) {
         throw new Error("Payment details missing");
       }
 
-      const normalizedUrls = Array.isArray(data?.urls)
-        ? data.urls
-            .filter((u: any) => u && u.link)
-            .map((u: any) => ({ name: u.name || u.description || "Bank App", link: u.link }))
+      const normalizedUrls: PaymentAppLink[] | undefined = Array.isArray(
+        data?.urls
+      )
+        ? (data.urls as Array<Partial<PaymentAppLink> | null>)
+            .filter((app): app is Partial<PaymentAppLink> & { link: string } =>
+              Boolean(app?.link && typeof app.link === "string")
+            )
+            .map((app) => ({
+              name: app?.name || app?.description || "Bank App",
+              description: app?.description,
+              logo: app?.logo,
+              link: app.link,
+            }))
         : undefined;
 
       setPaymentDetails({
         invoice_id: data.invoice_id,
         qr_image: data.qr_image,
         qr_link: data.qr_link || data.qPay_shortUrl || "",
+        qr_text: data.qr_text,
         qPay_shortUrl: data.qPay_shortUrl,
         urls: normalizedUrls,
       });
@@ -361,7 +401,7 @@ export default function GuestTopUp() {
   const getStepLabel = (): string => {
     switch (currentStep) {
       case 1:
-        return "Search SIM";
+        return "Search eSIM";
       case 2:
         return "Select Plan";
       case 3:
@@ -385,26 +425,29 @@ export default function GuestTopUp() {
     } = useTopupInvoiceStatus(paymentDetails?.invoice_id || null, {
       enabled: false, // Disabled - no automatic polling allowed
       onSuccess: (result) => {
-        if (!hasRedirectedRef.current && result.data?.orderId) {
+        if (!hasRedirectedRef.current && result.data?.status === "PAID") {
           hasRedirectedRef.current = true;
           const orderNo =
             result.data.orderNo ||
             result.data.orderId ||
             paymentDetails?.invoice_id;
-          // Fetch eSIM details when payment is confirmed
-          if (result.data?.status === "PAID" && orderNo) {
+          if (orderNo) {
             fetchEsimDetails(orderNo);
-          }else{
-            setEsimDetailsError("Failed to fetch eSIM details");
-            setError("Payment failed");
           }
-          // window.location.href = `/guest/success?orderId=${orderId}`;
+          showPopup("Амжилттай", "success");
         }
       },
       onError: (error) => {
         setError(error.message);
       },
     });
+
+    // Display payment check errors from the hook
+      useEffect(() => {
+        if (paymentCheckError && !error) {
+          setError(paymentCheckError);
+        }
+      }, [paymentCheckError, error]);
 
   // -------- UI --------
   return (
@@ -441,22 +484,36 @@ export default function GuestTopUp() {
           </Card>
         )}
 
+        {/* POPUP */}
+        {popup.show && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`mb-6 rounded-2xl border p-4 text-sm font-semibold ${
+              popup.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-red-200 bg-red-50 text-red-600"
+            }`}
+          >
+            {popup.message}
+          </div>
+        )}
+
         {/* -------- STEP 1: SEARCH ICCID -------- */}
         {currentStep === 1 && (
           <Card>
             <form onSubmit={handleSearch} className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold mb-2">Search Your SIM Card</h2>
+                <h2 className="text-xl font-bold mb-2">{t("topUpSimCardDesc")}</h2>
                 <p className="text-sm text-slate-600 mb-4">
-                  Enter your SIM card ICCID to find available top-up packages
+                  {t("searchEsimForTopUp")}
                 </p>
               </div>
 
               <Input
-                label="ICCID"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter ICCID"
+                placeholder={t("enterIccid")}
               />
 
               <Button type="submit" disabled={isSearching} className="w-full">
@@ -490,9 +547,11 @@ export default function GuestTopUp() {
 
                           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                             {baseEsim.esimStatus === 'USED_EXPIRED'
-                              ? 'Expired'
+                              ? 'Хугацаа дууссан'
+                              : baseEsim.esimStatus === 'CANCEL'
+                              ? 'Буцаасан'
                               : baseEsim.esimStatus === 'GOT_RESOURCE' || baseEsim.esimStatus === 'IN_USED'
-                              ? 'Active'
+                              ? 'Идэвхтэй'
                               : baseEsim.esimStatus ?? baseEsim.status ?? "-"}
                           </span>
                         </div>
@@ -531,7 +590,7 @@ export default function GuestTopUp() {
             {/* PACKAGES */}
             <Card>
               <h2 className="font-bold text-2xl text-slate-900 mb-3">
-                Available Top-up Packages
+                {t("avialableTopupPackages")}
               </h2>
 
               {suggestPackages.length > 0 && (
@@ -542,7 +601,7 @@ export default function GuestTopUp() {
 
               {suggestPackages.length === 0 ? (
                 <p className="text-slate-500">
-                  No packages available for this SIM card or the SIM card has expired.
+                  {t("noAvialableTopupPackages")}
                 </p>
               ) : (
                 <div className="grid md:grid-cols-3 gap-6">
@@ -645,7 +704,7 @@ export default function GuestTopUp() {
                           className="w-full py-3.5 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-sm hover:shadow-md mt-auto"
                           onClick={() => handleSelectPlan(pkg)}
                         >
-                          {t("selectPlan")}
+                          {t("purchasePlan")}
                         </Button>
                       </div>
                     </Card>
@@ -667,21 +726,20 @@ export default function GuestTopUp() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-xl font-bold mb-2">Phone Number</h2>
+                <h2 className="text-xl font-bold mb-2">{t("enterPhoneNumber")}</h2>
                 <p className="text-sm text-slate-600">
-                  Enter your phone number to continue
+                  {t("phoneInvalid")}
                 </p>
               </div>
 
               <div>
                 <Input
-                  label={t("phoneNumber")}
                   value={phone}
                   onChange={(e) => {
                     setPhone(e.target.value);
                     setPhoneError("");
                   }}
-                  placeholder="Enter phone number (8 digits)"
+                  placeholder={t("phonePlaceholder")}
                   error={phoneError}
                 />
               </div>
@@ -708,21 +766,20 @@ export default function GuestTopUp() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-xl font-bold mb-2">Email Address</h2>
+                <h2 className="text-xl font-bold mb-2">{t("enterEmail")}</h2>
                 <p className="text-sm text-slate-600">
-                  Enter your email address to continue
+                  {t("enterEmailTopup")}
                 </p>
               </div>
 
               <div>
                 <Input
-                  label={t("email")}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     setEmailError("");
                   }}
-                  placeholder="Enter email address"
+                  placeholder={t("emailPlaceholder")}
                   error={emailError}
                   type="email"
                 />
@@ -742,12 +799,12 @@ export default function GuestTopUp() {
         {/* -------- STEP 5: REVIEW/SUMMARY -------- */}
         {currentStep === 5 && selectedPlan && (
           <Card>
-            <h2 className="text-2xl font-bold mb-8">Plan Summary</h2>
+            <h2 className="text-2xl font-bold mb-8">Ерөнхий мэдээлэл</h2>
 
             <div className="space-y-6 mb-8">
               {/* SIM INFO */}
               <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-4">SIM Information</h3>
+                <h3 className="font-semibold text-slate-900 mb-4">Исим мэдээлэл</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">ICCID:</span>
@@ -756,7 +813,7 @@ export default function GuestTopUp() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Status:</span>
+                    <span className="text-slate-600">Төлөв:</span>
                     <span className="font-medium text-emerald-700">Active</span>
                   </div>
                 </div>
@@ -764,22 +821,22 @@ export default function GuestTopUp() {
 
               {/* PLAN DETAILS */}
               <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-4">Plan Details</h3>
+                <h3 className="font-semibold text-slate-900 mb-4">Багцны мэдээлэл</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Package:</span>
+                    <span className="text-slate-600">Багц:</span>
                     <span className="font-medium text-slate-900">
                       {selectedPlan.name}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Data:</span>
+                    <span className="text-slate-600">Дата:</span>
                     <span className="font-medium text-slate-900">
                       {Number(selectedPlan.volume) / 1024 / 1024 / 1024} GB
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Valid For:</span>
+                    <span className="text-slate-600">Хүчинтэй хугацаа:</span>
                     <span className="font-medium text-slate-900">
                       {selectedPlan.duration} {selectedPlan.durationUnit}
                     </span>
@@ -795,14 +852,14 @@ export default function GuestTopUp() {
 
               {/* CONTACT INFO */}
               <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-4">Contact Information</h3>
+                <h3 className="font-semibold text-slate-900 mb-4">Холбоо барих мэдээлэл</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Phone:</span>
+                    <span className="text-slate-600">Утас:</span>
                     <span className="font-medium text-slate-900">{phone}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Email:</span>
+                    <span className="text-slate-600">Имэйл:</span>
                     <span className="font-medium text-slate-900">{email}</span>
                   </div>
                 </div>
@@ -827,7 +884,7 @@ export default function GuestTopUp() {
 
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={handleBack}>
-                      Back
+                      {t("back")}
                     </Button>
                     <Button type="submit" className="flex-1" disabled={isSubmitting}>
                       {isSubmitting ? "Processing..." : "Confirm & Pay"}
@@ -837,11 +894,30 @@ export default function GuestTopUp() {
               ) : (
                 <div className="space-y-5">
                   <div className="bg-blue-50 border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-900">Payment created. Use the QR or link below to pay.</p>
+                    <p className="text-sm text-blue-900">Та доорх QR кодыг сканнерлаад төлбөрөө төлөөд Төлбөрийн төлөв шалгах товчийг дарна уу.</p>
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button className="flex-1" onClick={async () => await manualCheckStatus()}>Төлбөрийн төлөв шалгах</Button>
+                  <div className="flex gap-3 items-center">
+                    {!(paymentStatus?.data?.status === 'PAID') ? (
+                      <Button
+                        className="flex-1"
+                        onClick={async () => {
+                          const result = await manualCheckStatus();
+                          if (result?.success && result.data?.status === 'PAID') {
+                            showPopup('Амжилттай', 'success');
+                          } else {
+                            showPopup('Төлбөр төлөгдөөгүй байна', 'error');
+                          }
+                        }}
+                      >
+                        Төлбөрийн төлөв шалгах
+                      </Button>
+                    ) : (
+                      <div className="flex-1 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-700 font-semibold">
+                        Амжилттай
+                      </div>
+                    )}
+
                     <Button variant="outline" className="flex-1" onClick={() => setPaymentDetails(null)}>Reset</Button>
                   </div>
 
@@ -856,7 +932,7 @@ export default function GuestTopUp() {
                             className="w-full h-full object-contain"
                           />
                         </div>
-                        <p className="text-sm text-slate-500 text-center">Scan to pay with your preferred wallet or banking app.</p>
+                        <p className="text-sm text-slate-500 text-center">{t("qrCodeExpires")}</p>
                       </div>
                     </div>
                   )}

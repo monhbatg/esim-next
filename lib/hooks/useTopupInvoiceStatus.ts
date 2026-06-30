@@ -28,13 +28,11 @@ interface PaymentStatusResult {
     paid_amount?: number;
     payment_details?: QPayCheckResponse['rows'][0];
     count?: number;
+    message?: string;
   };
   error?: string;
 }
 
-/**
- * Options for invoice status polling
- */
 interface PollingOptions {
   interval?: number; // Polling interval in milliseconds (default: 3000)
   timeout?: number; // Maximum polling duration in milliseconds (default: 300000 = 5 minutes)
@@ -56,7 +54,7 @@ interface UseInvoiceStatusReturn {
   isPolling: boolean;
   stopPolling: () => void;
   startPolling: () => void;
-  checkStatus: () => Promise<void>;
+  checkStatus: () => Promise<PaymentStatusResult | null>;
 }
 
 /**
@@ -83,17 +81,33 @@ async function checkInvoiceStatus(invoiceId: string): Promise<PaymentStatusResul
     const result = await response.json();
 
     if (!response.ok) {
-      // Handle specific error cases as per guide
       const errorMessage = result.error || 'Failed to check payment status';
-      
-      // Return error with status information
+
       return {
         success: false,
         error: errorMessage,
       };
     }
 
-    return result as PaymentStatusResult;
+    const paid = Array.isArray(result.rows) && result.rows.some((row: any) => row.payment_status === 'PAID');
+    const status = paid || result.orderPlaced || Boolean(result.orderNo || result.orderId)
+      ? 'PAID'
+      : result.count === 0 || result.message?.toLowerCase().includes('not paid')
+      ? 'NEW'
+      : 'PENDING';
+
+    return {
+      success: true,
+      data: {
+        status,
+        orderId: result.orderId,
+        orderNo: result.orderNo ?? result.orderId,
+        paid_amount: result.paid_amount,
+        payment_details: Array.isArray(result.rows) ? result.rows[0] : undefined,
+        count: result.count,
+        message: result.message,
+      },
+    };
   } catch (error) {
     // Handle network errors and other exceptions
     // According to guide: implement retry logic for transient errors
@@ -264,8 +278,8 @@ export function useTopupInvoiceStatus(
     }, interval);
   };
 
-  const checkStatus = async () => {
-    if (!invoiceId) return;
+  const checkStatus = async (): Promise<PaymentStatusResult | null> => {
+    if (!invoiceId) return null;
 
     setLoading(true);
     setError(null);
@@ -282,9 +296,15 @@ export function useTopupInvoiceStatus(
       } else if (result.error) {
         setError(result.error);
       }
+
+      return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
+      return {
+        success: false,
+        error: errorMessage,
+      };
     } finally {
       setLoading(false);
     }
