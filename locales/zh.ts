@@ -151,6 +151,8 @@ export default {
   checkPaymentDesc: "输入您的电话号码或电子邮件以检查您的订单状态",
   phoneOrEmail: "电话号码或电子邮件",
   phoneOrEmailPlaceholder: "+861234567890 或 your.email@example.com",
+  enterIccid: "输入您的ICCID",
+  iccidRequired: "20-character ICCID is required",
   phoneOrEmailRequired: "请输入您的电话号码或电子邮件",
   checkStatus: "检查状态",
   checking: "检查中...",

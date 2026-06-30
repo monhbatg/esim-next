@@ -427,8 +427,6 @@ export default function GuestCheckout() {
         qr_text: purchaseData.qr_text,
         qPay_shortUrl: purchaseData.qPay_shortUrl,
         urls: normalizedUrls,
-        customerId: purchaseData.customerId,
-        internalInvoiceId: purchaseData.internalInvoiceId,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error"));

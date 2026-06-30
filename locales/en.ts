@@ -121,6 +121,7 @@ export default {
   enterEmail: "Enter Your Email",
   enterEmailDesc:
     "We'll send your eSIM QR code and activation instructions here",
+  enterEmailTopup: "We'll send your top-up confirmation and details to this email",
   emailAddress: "Email Address",
   emailPlaceholder: "your.email@example.com",
   emailRequired: "Email is required",
@@ -164,6 +165,10 @@ export default {
     "Enter your phone number or email to check your order status",
   phoneOrEmail: "Phone Number or Email",
   phoneOrEmailPlaceholder: "+1234567890 or your.email@example.com",
+  enterIccid: "Enter your ICCID",
+  iccidRequired: "20-character ICCID is required",
+  avialableTopupPackages: "Available Top-up Packages",
+  noAvialableTopupPackages: "No packages available for this SIM card or the SIM card has expired.",
   phoneOrEmailRequired: "Please enter your phone number or email",
   checkStatus: "Check Status",
   checking: "Checking...",
