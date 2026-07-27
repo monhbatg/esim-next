@@ -13,6 +13,7 @@ interface InvoiceItem {
   customer_phoneNumber: string;
   invoice_createdAt: string;
   package_name: string;
+  invoice_iccId: string;
 }
 
 export interface EsimPackage {
@@ -197,6 +198,7 @@ const Operator: React.FC = () => {
                     <th className="py-4 px-4 text-left">№</th>
                     <th className="py-4 px-4 text-left">Огноо</th>
                     <th className="py-4 px-4 text-left">Нэр</th>
+                    <th className="py-4 px-4 text-center">Төрөл</th>
                     <th className="py-4 px-4 text-center">Төлөв</th>
                     <th className="py-4 px-4 text-center">Утас</th>
                     <th className="py-4 px-4 text-center">И-мэйл</th>
@@ -231,6 +233,17 @@ const Operator: React.FC = () => {
                             .replace("T", " ")}
                         </td>
                         <td className="py-4 px-4 font-semibold">{invoiceItem.package_name}</td>
+                        <td className="py-4 px-4 text-center">
+                          {invoiceItem.invoice_iccId != null? 
+                          <span className="bg-indigo-100 text-amber-700 px-2 py-1 rounded-full text-xs">
+                            Цэнэглэлт
+                          </span>
+                          : 
+                          <span className="bg-indigo-100 text-emerald-700 px-2 py-1 rounded-full text-xs">
+                            Шинэ
+                          </span>
+                          }
+                        </td>
                         <td className="py-4 px-4 text-center">
                           <StatusBadge status={invoiceItem.invoice_status} />
                         </td>
