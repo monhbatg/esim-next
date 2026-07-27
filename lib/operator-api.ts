@@ -16,6 +16,7 @@ interface InvoiceItem {
   customer_phoneNumber: string;
   invoice_createdAt: string; // ISO date string
   package_name: string;
+  invoice_iccId: string; // Added iccId field
 }
 
 interface EsimPackage {
