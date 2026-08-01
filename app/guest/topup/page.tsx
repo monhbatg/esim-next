@@ -83,6 +83,7 @@ export default function GuestTopUp() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentCheckPending, setIsPaymentCheckPending] = useState(false);
+  const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{ orderNo?: string; orderId?: string } | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<{
     invoice_id: string;
     qr_image?: string;
@@ -171,7 +172,9 @@ export default function GuestTopUp() {
       hasFetchedEsimRef.current = true;
   
       try {
-        const response = await fetch("/api/guest/esim/queryTopup", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        const url = `${apiUrl}/api/v1/open/esim/queryTopup`;
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -193,7 +196,7 @@ export default function GuestTopUp() {
           );
         }
   
-        if (result.success && result.obj?.esimList?.length > 0) {
+        if (result.success && result.obj?.esimList[0]) {
           setEsimDetails(result.obj.esimList[0] as EsimDetails);
         } else {
           setEsimDetailsError("No eSIM details found for this order");
@@ -888,7 +891,7 @@ export default function GuestTopUp() {
                       {t("back")}
                     </Button>
                     <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                      {isSubmitting ? "Processing..." : "Confirm & Pay"}
+                      {isSubmitting ? "Processing..." : "Төлбөр төлөх"}
                     </Button>
                   </div>
                 </form>
@@ -927,86 +930,100 @@ export default function GuestTopUp() {
                         Амжилттай
                       </div>
                     )}
-
-                    <Button variant="outline" className="flex-1" onClick={() => setPaymentDetails(null)}>Reset</Button>
+                      {/**reset button go step 1 */}
+                    <Button variant="outline" className="flex-1" onClick={() => {
+                      /**set iccID null */
+                      setIdentifier("");
+                      setPhone("");
+                      setEmail("");
+                      setPaymentDetails(null);
+                      setCurrentStep(1);
+                    }}>
+                      Дахин эхлэх
+                    </Button>
                   </div>
 
-                  {paymentDetails.qr_image && (
-                    <div className="flex justify-center">
-                      <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col items-center gap-4 w-full max-w-md">
-                        <div className="w-full max-w-xs aspect-square rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={paymentDetails.qr_image.startsWith("data:") ? paymentDetails.qr_image : `data:image/png;base64,${paymentDetails.qr_image}`}
-                            alt="QR"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <p className="text-sm text-slate-500 text-center">{t("qrCodeExpires")}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bank Apps Section - Full Width Below QR */}
-                  {paymentDetails.urls && paymentDetails.urls.length > 0 && (
-                    <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-200 p-6 space-y-5">
-                      <div className="text-center">
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">
-                          {t("bankAppPaymentsTitle")}
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          {t("bankAppPaymentsDesc")}
-                        </p>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {paymentDetails.urls.map((app) => (
-                          <a
-                            key={`${app.name}-${app.link}`}
-                            href={app.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-200 flex items-center gap-3 cursor-pointer"
-                          >
-                            {app.logo ? (
-                              // eslint-disable-next-line @next/next/no-img-element
+                  {(paymentStatus?.data?.status !== 'PAID') && (
+                    <>
+                      {/* QR Code Section */}
+                      {paymentDetails.qr_image && (
+                        <div className="flex justify-center">
+                          <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col items-center gap-4 w-full max-w-md">
+                            <div className="w-full max-w-xs aspect-square rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                src={app.logo}
-                                alt={app.name}
-                                className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 group-hover:border-blue-400 transition-colors"
-                                referrerPolicy="no-referrer"
+                                src={paymentDetails.qr_image.startsWith("data:") ? paymentDetails.qr_image : `data:image/png;base64,${paymentDetails.qr_image}`}
+                                alt="QR"
+                                className="w-full h-full object-contain"
                               />
-                            ) : (
-                              <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-100 to-cyan-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
-                                {app.name.charAt(0)}
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                                {app.name}
-                              </p>
-                              {app.description && (
-                                <p className="text-xs text-slate-500 truncate">
-                                  {app.description}
-                                </p>
-                              )}
                             </div>
-                            <svg
-                              className="w-5 h-5 text-slate-400 shrink-0 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 7l5 5m0 0l-5 5m5-5H6"
-                              />
-                            </svg>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
+                            <p className="text-sm text-slate-500 text-center">{t("qrCodeExpires")}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bank Apps Section - Full Width Below QR */}
+                      {paymentDetails.urls && paymentDetails.urls.length > 0 && (
+                        <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-200 p-6 space-y-5">
+                          <div className="text-center">
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">
+                              {t("bankAppPaymentsTitle")}
+                            </h3>
+                            <p className="text-sm text-slate-600">
+                              {t("bankAppPaymentsDesc")}
+                            </p>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {paymentDetails.urls.map((app) => (
+                              <a
+                                key={`${app.name}-${app.link}`}
+                                href={app.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-200 flex items-center gap-3 cursor-pointer"
+                              >
+                                {app.logo ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={app.logo}
+                                    alt={app.name}
+                                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 group-hover:border-blue-400 transition-colors"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-100 to-cyan-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
+                                    {app.name.charAt(0)}
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                                    {app.name}
+                                  </p>
+                                  {app.description && (
+                                    <p className="text-xs text-slate-500 truncate">
+                                      {app.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <svg
+                                  className="w-5 h-5 text-slate-400 shrink-0 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                  />
+                                </svg>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
