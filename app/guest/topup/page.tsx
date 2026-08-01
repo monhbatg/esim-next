@@ -82,6 +82,7 @@ export default function GuestTopUp() {
   const [selectedPlan, setSelectedPlan] = useState<EsimPackage | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentCheckPending, setIsPaymentCheckPending] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState<{
     invoice_id: string;
     qr_image?: string;
@@ -901,16 +902,25 @@ export default function GuestTopUp() {
                     {!(paymentStatus?.data?.status === 'PAID') ? (
                       <Button
                         className="flex-1"
+                        disabled={isPaymentCheckPending || isCheckingPayment}
                         onClick={async () => {
-                          const result = await manualCheckStatus();
-                          if (result?.success && result.data?.status === 'PAID') {
-                            showPopup('Амжилттай', 'success');
-                          } else {
-                            showPopup('Төлбөр төлөгдөөгүй байна', 'error');
+                          if (isPaymentCheckPending || isCheckingPayment) return;
+
+                          setIsPaymentCheckPending(true);
+
+                          try {
+                            const result = await manualCheckStatus();
+                            if (result?.success && result.data?.status === 'PAID') {
+                              showPopup('Амжилттай', 'success');
+                            } else {
+                              showPopup('Амжилтгүй: Төлбөр төлөгдөөгүй байна', 'error');
+                            }
+                          } finally {
+                            setIsPaymentCheckPending(false);
                           }
                         }}
                       >
-                        Төлбөрийн төлөв шалгах
+                        {isPaymentCheckPending ? 'Түр хүлээнэ үү...' : 'Төлбөрийн төлөв шалгах'}
                       </Button>
                     ) : (
                       <div className="flex-1 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-700 font-semibold">
