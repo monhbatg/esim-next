@@ -151,5 +151,25 @@ export const operatorApi = {
       }
     
       return response.data;
+    },
+
+    /**
+     * Cancel payment using transaction number
+     */
+    cancelPayment: async (transNo: string): Promise<PaymentStatusResponse> => {
+      const response = await api.post<PaymentStatusResponse>(
+        `/api/esim/action/1/transno/${transNo}`, // ✅ pass as param
+        {}, // ✅ empty body
+        {
+          // ⚠️ remove skipAuth if endpoint requires token
+        }
+      );
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to check payment status');
+      }
+    
+      return response.data;
     }
+
 }

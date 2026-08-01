@@ -283,7 +283,22 @@ const Operator: React.FC = () => {
                                 ? "Шалгаж байна..."
                                 : "Төлбөр шалгах"}
                             </button>
-                          )}
+                          )
+                        }
+                        {
+                          invoiceItem.invoice_status === "PAID" && invoiceItem.invoice_iccId === null && (
+                            <button
+                              onClick={() => {
+                                // cancel button click handler
+                                console.log("Cancel clicked for invoice:", invoiceItem.invoice_id);
+                              }}
+                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                            >
+                              Цуцлах
+                            </button>
+                          )
+                                  
+                        }
                         </td>
                       </tr>
                     ))
