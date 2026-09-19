@@ -1,10 +1,30 @@
 {
-  "name": "esim-next",
+  "name": "@goy/esim-client",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "Framework-agnostic client for the GOY eSIM API",
+  "license": "SEE LICENSE IN LICENSE",
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "dev": "next dev",
     "build": "ESLINT_NO_DEV_ERRORS=true next build",
+    "build:library": "tsc -p tsconfig.library.json",
+    "publish:private": "npm run build:library && npm publish --access restricted",
+    "prepublishOnly": "npm run build:library",
     "start": "next start",
     "lint": "eslint"
   },

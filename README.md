@@ -1,5 +1,31 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Publish the eSIM client
+
+This repository contains the Next.js storefront and a framework-agnostic npm client. Consumers should install the published client rather than importing the `app/` directory:
+
+```bash
+npm login
+npm run publish:private
+```
+
+The package is configured as an npm scoped private package. Customers must be granted read access from your npm organization before they can install it. See [PRIVATE_PACKAGE_GUIDE.md](PRIVATE_PACKAGE_GUIDE.md) for the partner workflow.
+
+Example consumer usage:
+
+```ts
+import { createEsimClient } from "@goy/esim-client";
+
+const esim = createEsimClient({
+	baseUrl: "https://api.example.com",
+	token: () => localStorage.getItem("token"),
+});
+
+const marketplace = await esim.get("/api/marketplace");
+```
+
+The package uses the browser/Node `fetch` API and has no Next.js dependency. Keep secrets and privileged operations on the server; do not publish private backend credentials in a browser consumer.
+
 ## Getting Started
 
 First, run the development server:
