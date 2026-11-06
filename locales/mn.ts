@@ -419,4 +419,11 @@ export default {
   TransparencyDescription: "Clear pricing, no hidden fees. What you see is what you pay - it's that straightforward.",
   Innovation: "Innovation",
   InnovationDescription: "We're constantly improving our platform to provide you with the best connectivity experience.",
+
+  myProfile: "Миний профайл",
+  addFunds: "Цэнэглэх",
+  viewOrders: "Захиалгаа харах",
+  manageEsims: "eSIM-ээ удирдах",
+  accountSettings: "Тохиргоо",
+  logout: "Гарах",
 };

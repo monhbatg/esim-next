@@ -271,7 +271,7 @@ export default function WalletCard() {
                     Quick Amount
                   </label>
                   <div className="grid grid-cols-4 gap-3">
-                    {[10000, 20000, 50000, 100000].map((quickAmount) => (
+                    {[100000, 200000, 500000, 1000000].map((quickAmount) => (
                       <button
                         key={quickAmount}
                         type="button"
@@ -389,7 +389,7 @@ export default function WalletCard() {
                         Add{" "}
                         {amount
                           ? formatCurrency(parseFloat(amount), wallet.currency)
-                          : "Funds"}
+                          : "Funds"} Request
                       </span>
                     )}
                   </Button>

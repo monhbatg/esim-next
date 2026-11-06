@@ -390,5 +390,12 @@ export default {
   Transparency: "Transparency",
   TransparencyDescription: "Clear pricing, no hidden fees. What you see is what you pay - it's that straightforward.",
   Innovation: "Innovation",
-  InnovationDescription: "We're constantly improving our platform to provide you with the best connectivity experience."
+  InnovationDescription: "We're constantly improving our platform to provide you with the best connectivity experience.",
+
+  myProfile: "My Profile",
+  addFunds: "Add Funds",
+  viewOrders: "View Orders",
+  manageEsims: "Manage eSIMs",
+  accountSettings: "Account Settings",
+  logout: "Logout",
 };
